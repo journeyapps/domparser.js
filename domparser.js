@@ -72,5 +72,35 @@
         };
     }
 
+    function XMLSerializer() {
+
+    }
+
+    function nativeSerializeToString(node) {
+        return new window.XMLSerializer().serializeToString(node);
+    }
+
+    XMLSerializer.prototype.serializeToString = function(node) {
+        // Whitespace characters between processing instructions are lost, and browsers serialize them differently.
+        // We write these individually, and include newline characters in between them.
+        // Note that our DOMParser is the only one that saves the processing instructions in the DOM, browsers don't do this.
+        if(node.nodeType == node.DOCUMENT_NODE && node.firstChild && node.firstChild.nodeType == node.PROCESSING_INSTRUCTION_NODE) {
+            var children = node.childNodes;
+            var result = '';
+            for(var i = 0; i < children.length; i++) {
+                result += nativeSerializeToString(children[i]);
+                if(i != children.length - 1) {
+                    result += '\n';
+                }
+            }
+            return result;
+        } else {
+            return nativeSerializeToString(node);
+        }
+        // TODO: if it is a document without any processing instructions, generate one ourselves
+        // Something like this: <?xml version="1.0" encoding="UTF-8"?>
+    };
+
     domparser.DOMParser = DOMParser;
+    domparser.XMLSerializer = XMLSerializer;
 })(domparser = {});

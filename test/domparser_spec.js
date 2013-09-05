@@ -3,7 +3,7 @@ describe('DOMParser', function() {
 
     function testReadWrite(source) {
         var doc = new DOMParser().parseFromString(source);
-        var serialized = new XMLSerializer().serializeToString(doc);
+        var serialized = new domparser.XMLSerializer().serializeToString(doc);
         expect(serialized).toEqual(source);
         testSameDOM(source);
     }
@@ -25,15 +25,15 @@ describe('DOMParser', function() {
     });
 
     it('should preserve the xml processing instructions', function() {
-        testReadWrite('<?xml version="1.0"?><xml>Hello<test>me</test></xml>');
-        testReadWrite('<?xml version="1.0" encoding="UTF-8"?><xml>Hello<test>me</test></xml>');
+        testReadWrite('<?xml version="1.0"?>\n<xml>Hello<test>me</test></xml>');
+        testReadWrite('<?xml version="1.0" encoding="UTF-8"?>\n<xml>Hello<test>me</test></xml>');
     });
 
     it('should preserve namespaces', function() {
-        testReadWrite('<?xml version="1.0"?><schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="unqualified"><simpleType name="name"/></schema>');
-        testReadWrite('<?xml version="1.0"?><schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="unqualified"><simpleType name="name"/></schema>');
-        testReadWrite('<?xml version="1.0"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="unqualified"><simpleType name="name"/></xs:schema>');
-        testReadWrite('<?xml version="1.0"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:example="http://example.org" elementFormDefault="unqualified"><xs:simpleType example:name="name"/></xs:schema>');
+        testReadWrite('<?xml version="1.0"?>\n<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="unqualified"><simpleType name="name"/></schema>');
+        testReadWrite('<?xml version="1.0"?>\n<schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="unqualified"><simpleType name="name"/></schema>');
+        testReadWrite('<?xml version="1.0"?>\n<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="unqualified"><simpleType name="name"/></xs:schema>');
+        testReadWrite('<?xml version="1.0"?>\n<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:example="http://example.org" elementFormDefault="unqualified"><xs:simpleType example:name="name"/></xs:schema>');
     });
 
     it('should preserve newlines in the document', function() {
@@ -65,4 +65,22 @@ describe('DOMParser', function() {
         expect('column ' + elm2.column).toBe('column 4');
     });
 
+});
+
+describe('XMLSerializer', function() {
+
+    it('should serialize built-in processing instructions', function() {
+        // Test that this works with documents parsed by the native DOMParser, at least as well as the native.
+        // XMLSerializer.
+
+        // Note that the result differs between browsers, so we only test that we get the same as the browser:
+        // Firefox: '<?xml version="1.0" encoding="UTF-8"?>\n<xml>Test</xml>'
+        // Chrome: '<?xml version="1.0"?><xml>Test</xml>'
+        // PhantomJS: '<xml>Test</xml>'
+
+        var doc = new window.DOMParser().parseFromString('<?xml version="1.0"?>\n<xml>Test</xml>', 'text/xml');
+        var serialized = new domparser.XMLSerializer().serializeToString(doc);
+        var nativeSerialized = new window.XMLSerializer().serializeToString(doc);
+        expect(serialized).toEqual(nativeSerialized);
+    });
 });

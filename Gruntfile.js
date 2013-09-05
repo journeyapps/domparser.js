@@ -37,7 +37,8 @@ module.exports = function(grunt) {
             },
             ci: {
                 singleRun: true,
-                browsers: ['PhantomJS', 'Firefox']
+                browsers: ['PhantomJS', 'Firefox'],
+                reporters: 'dots'
             }
         }
     });
