@@ -24,6 +24,7 @@
     "karma-script-launcher": "~0.1.0",
     "karma-firefox-launcher": "~0.1.0",
     "karma": "~0.10.2",
-    "karma-chrome-launcher": "~0.1.0"
+    "karma-chrome-launcher": "~0.1.0",
+    "karma-sauce-launcher": "~0.1.0"
   }
 }

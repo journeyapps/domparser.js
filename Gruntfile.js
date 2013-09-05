@@ -39,6 +39,9 @@ module.exports = function(grunt) {
                 singleRun: true,
                 browsers: ['PhantomJS', 'Firefox'],
                 reporters: 'dots'
+            },
+            sauce: {
+                configFile: 'karma-sauce.conf.js'
             }
         }
     });
