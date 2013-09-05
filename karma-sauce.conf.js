@@ -40,6 +40,7 @@ module.exports = function(config) {
             username: process.env.SAUCE_USERNAME,
             accessKey: process.env.SAUCE_ACCESS_KEY,
             startConnect: false,
+            tunnelIdentifier: process.env.TRAVIS_TRAVIS_JOB_NUMBER,
             testName: 'domparser'
         },
 
