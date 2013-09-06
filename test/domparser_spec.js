@@ -77,18 +77,30 @@ describe('DOMParser', function() {
     });
 
 
+    it('should parse a text node', function() {
+        var doc = new DOMParser().parseFromString('<?xml version="1.0"?>\n<test>\n<b>Some\n&lt;Text&gt;</b>\n</test>');
+
+        var text = doc.getElementsByTagName('b')[0].firstChild;
+        expect(text.textContent).toBe('Some\n<Text>');
+    });
+
     it('should record line and column of elements', function() {
         var doc = new DOMParser().parseFromString('<?xml version="1.0"?>\n<test>\n<me><b /></me></test>');
 
-        var elm = doc.getElementsByTagName('b')[0];
-        expect('line ' + elm.line).toBe('line 3');
-        expect('column ' + elm.column).toBe('column 9');
+        var elmb = doc.getElementsByTagName('b')[0];
+        var elmme = doc.getElementsByTagName('me')[0];
 
-        var elm2 = doc.getElementsByTagName('me')[0];
-        expect('line ' + elm2.line).toBe('line 3');
-        expect('column ' + elm2.column).toBe('column 4');
+        expect(elmme.openStart).toEqual({line: 2, column: 0});
+        expect(elmme.openEnd).toEqual({line: 2, column: 4});
+        expect(elmme.closeStart).toEqual({line: 2, column: 9});
+        expect(elmme.closeEnd).toEqual({line: 2, column: 14});
+
+        expect(elmb.openStart).toEqual({line: 2, column: 4});
+        expect(elmb.openEnd).toEqual({line: 2, column: 9});
+        // Self-closing tag
+        expect(elmb.closeStart).toEqual({line: 2, column: 4});
+        expect(elmb.closeEnd).toEqual({line: 2, column: 9});
     });
-
 });
 
 describe('XMLSerializer', function() {
