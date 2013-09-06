@@ -64,7 +64,7 @@ module.exports = function(grunt) {
                 opts: { stdio: 'inherit' } // print to the same stdout
             }, function(err, result, code) {
                 tasks[task] = code;
-                if(code != 0) {
+                if(code !== 0) {
                     success = false;
                 }
                 next();
