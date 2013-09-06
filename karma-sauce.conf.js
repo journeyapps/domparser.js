@@ -77,9 +77,15 @@ module.exports = function(config) {
                 browserName: 'internet explorer',
                 platform: 'Windows 2012',
                 version: '10'
+            },
+            'SL_IPHONE': {
+                base: 'SauceLabs',
+                browserName: "iphone",
+                platform: "Mac 10.8",
+                version: "6"
             }
         },
 
-        browsers: ['SL_IE_9', 'SL_IE_10']
+        browsers: []
     });
 };
