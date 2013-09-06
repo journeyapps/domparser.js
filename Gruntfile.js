@@ -46,7 +46,7 @@ module.exports = function(grunt) {
             },
             sauce2: {
                 configFile: 'karma-sauce.conf.js',
-                browsers: ['SL_IPHONE', 'SL_Safari']
+                browsers: ['SL_Chrome', 'SL_Safari']
             }
         }
     });

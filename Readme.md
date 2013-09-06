@@ -17,6 +17,9 @@ reporting.
 
     var doc = new domparser.DOMParser().parseFromString("<test>xml</test>");
 
+## Supported browsers
+
+Tested on recent versions of Chrome, Firefox and Safari, and on IE 9 and 10. Does not work on IE 8 and below.
 
 # License
 
