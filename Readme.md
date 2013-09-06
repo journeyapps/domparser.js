@@ -21,6 +21,10 @@ reporting.
 
 Tested on recent versions of Chrome, Firefox and Safari, and on IE 9 and 10. Does not work on IE 8 and below.
 
+Tested with the help of [Travis](https://travis-ci.org/embarkmobile/domparser.js) and [SauceLabs](https://saucelabs.com/u/rkistner).
+
+[![Build Status](https://travis-ci.org/embarkmobile/domparser.js.png?branch=master)](https://travis-ci.org/embarkmobile/domparser.js)
+
 # License
 
 All files in this project are under the MIT license.
