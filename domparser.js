@@ -1,5 +1,32 @@
 (function(domparser) {
 
+    function XMLError(message, position) {
+        this.message = message;
+        this.line = position.line;
+        this.column = position.column;
+    }
+
+    function errorFromParser(error, parser) {
+        // The message is on the first line
+        // We could parse the position from the message, but it's easier to get it from the parser
+        return new XMLError(error.message.split('\n')[0], parser);
+    }
+
+    function getMatch(re, pos, str) {
+        var match = re.exec(str);
+        if(match) {
+            return match[pos];
+        } else {
+            return null;
+        }
+    }
+
+    function errorFromMessage(message) {
+        var msg = message.split('\n')[0];
+        var line = parseInt(getMatch(/Line: (\d+)/, 1, message), 10);
+        var column = parseInt(getMatch(/Column: (\d+)/, 1, message), 10);
+        return new XMLError(msg, {line: line, column: column});
+    }
 
     function DOMParser() {
         this.parseFromString = function(source) {
@@ -20,14 +47,13 @@
                 return {
                     line: line,
                     column: col
-                }
+                };
             }
 
             var parser = sax.parser(true, {xmlns: true});
             var errors = [];
             var end = false;
             var doc = document.implementation.createDocument(null, null, null);
-            var implementation = document.implementation;
             var current = doc;
 
             // Events we ignore:
@@ -38,9 +64,27 @@
             //   What does it do?
             //    'ready'
 
+            function addUnlessDuplicate(error) {
+                // Heuristics to filter out duplicates.
+                // Would be better to improve the behavior in the SAX parser.
+                var previous = errors[errors.length - 1];
+
+                if(previous && previous.line == error.line && previous.column == error.column) {
+                    // We expect the last message to be more informative - drop the previous message
+                    errors.pop();
+                    errors.push(error);
+                } else if(previous && previous.message == error.message && previous.line == error.line) {
+                    // Ignore, even if the columns are different
+                    // Typically the first error will have the most accurate column
+                } else {
+                    errors.push(error);
+                }
+            }
             parser.onerror = function (e) {
-                errors.push(e.message);
+                var error = errorFromParser(e, parser);
+                addUnlessDuplicate(error);
             };
+
             parser.ontext = function (t) {
                 if(current && current != doc) {
                     var node = doc.createTextNode(t);
@@ -90,10 +134,13 @@
                 end = true;
             };
 
-            parser.write(source).close();
-            if(!end) {
-                throw new Error('Failed to finish parsing');
+            try {
+                parser.write(source).close();
+            } catch(err) {
+                addUnlessDuplicate(errorFromMessage(err.message));
             }
+
+            doc.errors = errors;
             return doc;
         };
     }

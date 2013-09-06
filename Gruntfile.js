@@ -75,7 +75,8 @@ module.exports = function(grunt) {
     });
 
     // Default task.
-    grunt.registerTask('default', ['jshint', 'karma:unit']);
+    grunt.registerTask('test', ['jshint', 'karma:unit']);
+    grunt.registerTask('default', ['test']);
     grunt.registerTask('ci', ['jshint', 'karma:ci']);
 
 };

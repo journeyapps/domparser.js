@@ -101,6 +101,57 @@ describe('DOMParser', function() {
         expect(elmb.closeStart).toEqual({line: 2, column: 4});
         expect(elmb.closeEnd).toEqual({line: 2, column: 9});
     });
+
+    describe('error handling', function() {
+        function errorsFor(source) {
+            var doc = new DOMParser().parseFromString(source);
+            return doc.errors;
+        }
+
+        it('should report an unclosed root tag', function() {
+            var errors = errorsFor('<xml>');
+            expect(errors.length).toBe(1);
+            expect(errors[0]).toEqual({message: 'Unclosed root tag', line: 0, column: 5});
+        });
+
+        it('should report an unclosed comment', function() {
+            var errors = errorsFor('<xml><!--</xml>');
+            expect(errors.length).toBe(1);
+            expect(errors[0]).toEqual({message: 'Unexpected end', line: 0, column: 15});
+        });
+
+        it('should report an unquoted attribute tag', function() {
+            var errors = errorsFor('<xml><a attr=test /></xml>');
+            expect(errors.length).toBe(1);
+            expect(errors[0]).toEqual({message: 'Unquoted attribute value', line: 0, column: 14});
+        });
+
+        it('should report an unclosed element tag', function() {
+            var errors = errorsFor('<xml><a></xml>');
+            expect(errors.length).toBe(1);
+            expect(errors[0]).toEqual({message: 'Unexpected close tag', line: 0, column: 14});
+        });
+
+        it('should report an invalid closing tag', function() {
+            var errors = errorsFor('<xml><a></b></a></xml>');
+            expect(errors.length).toBe(1);
+            expect(errors[0]).toEqual({message: 'Unmatched closing tag: b', line: 0, column: 12});
+            // Alternative message: Unexpected close tag
+        });
+
+        it('should report an empty closing tag', function() {
+            var errors = errorsFor('<xml></></xml>');
+            expect(errors.length).toBe(1);
+            expect(errors[0]).toEqual({message: 'Invalid tagname in closing tag.', line: 0, column: 8});
+        });
+
+        xit('should report an invalid xml version', function() {
+            // This check is not implemented yet
+            var errors = errorsFor('<?xml version="notsupported"?><xml></xml>');
+            expect(errors.length).toBe(1);
+        });
+    });
+
 });
 
 describe('XMLSerializer', function() {

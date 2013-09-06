@@ -52,7 +52,7 @@ describe('sax', function() {
         expect(errors[1]).toEqual('Unexpected end\nLine: 0\nColumn: 9\nChar: ');
     });
 
-    it('should report an error when there is an unclosed comment', function() {
+    it('should report an error when there is an unquoted attribute', function() {
         // This one throws an exception where the others use the callback to report the error
         expect(function() {
             var errors = saxErrors('<xml attr=test></xml>');
