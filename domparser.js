@@ -99,7 +99,7 @@
                 try {
                 for(var key in node.attributes) {
                     var attr = node.attributes[key];
-                    if(attr.local == '') {
+                    if(attr.local === '') {
                         // This happens for the attribute `xmlns="http://www.w3.org/2001/XMLSchema"`:
                         // {name: 'xmlns', value: 'http://www.w3.org/2001/XMLSchema', prefix: 'xmlns', local: '', uri: 'http://www.w3.org/2000/xmlns/'
                         // While doc.createAttributeNS works for this case in Firefox and Chrome, it fails in PhantomJS.
