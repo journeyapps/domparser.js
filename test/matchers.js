@@ -4,6 +4,10 @@ beforeEach(function () {
     }
 
     function findDifference(actual, expected) {
+        if(expected == null || actual == null) {
+            return 'null node';
+        }
+
         if(actual.isEqualNode(expected)) {
             return null;
         }
@@ -51,7 +55,11 @@ beforeEach(function () {
                     "Expected node " + nodeToString(this.actual) + " not to equal node " + nodeToString(expected)
                 ];
             };
-            return this.actual.isEqualNode(expected);
+            if(expected == null || this.actual == null) {
+                return this.actual == expected;
+            } else {
+                return this.actual.isEqualNode(expected);
+            }
         }
     });
 });

@@ -52,7 +52,6 @@
 
             var parser = sax.parser(true, {xmlns: true});
             var errors = [];
-            var end = false;
             var doc = document.implementation.createDocument(null, null, null);
             var current = doc;
 
@@ -61,8 +60,8 @@
             //    'sgmldeclaration', 'doctype', 'script'
             //   Already included in the data of other events:
             //    'attribute', 'opencdata', 'closecdata', 'opennamespace', 'closenamespace'
-            //   What does it do?
-            //    'ready'
+            //   We're working with strings, not streams:
+            //    'ready', 'end'
 
             function addUnlessDuplicate(error) {
                 // Heuristics to filter out duplicates.
@@ -97,13 +96,28 @@
                 element.openStart = getPosition(parser.startTagPosition - 1);
                 element.openEnd = {line: parser.line, column: parser.column};
 
-                // We have: parser.line, parser.column, parser.position, parser.startTagPosition
+                try {
                 for(var key in node.attributes) {
                     var attr = node.attributes[key];
-                    element.setAttributeNS(attr.uri, attr.name, attr.value);
+                    if(attr.local == '') {
+                        // This happens for the attribute `xmlns="http://www.w3.org/2001/XMLSchema"`:
+                        // {name: 'xmlns', value: 'http://www.w3.org/2001/XMLSchema', prefix: 'xmlns', local: '', uri: 'http://www.w3.org/2000/xmlns/'
+                        // While doc.createAttributeNS works for this case in Firefox and Chrome, it fails in PhantomJS.
+                        // It's ok to simply not record positioning info in this case.
+                        element.setAttributeNS(attr.uri, attr.name, attr.value);
+                    } else {
+                        var attribute = doc.createAttributeNS(attr.uri, attr.name);
+                        attribute.value = attr.value;
+                        attribute.start = getPosition(attr.start - 1);
+                        attribute.end = getPosition(attr.end);
+                        element.setAttributeNodeNS(attribute);
+                    }
                 }
                 current.appendChild(element);
                 current = element;
+                } catch(err) {
+                    console.error(err);
+                }
             };
 
             parser.onclosetag = function() {
@@ -118,20 +132,12 @@
                 doc.appendChild(node);
             };
 
-            parser.onattribute = function (attr) {
-                // We handle attributes inside onopentag
-            };
-
             parser.oncdata = function(cdata) {
                 current.appendChild(doc.createCDATASection(cdata));
             };
 
             parser.oncomment = function(comment) {
                 current.appendChild(doc.createComment(comment));
-            };
-
-            parser.onend = function () {
-                end = true;
             };
 
             try {

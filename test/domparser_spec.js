@@ -102,6 +102,16 @@ describe('DOMParser', function() {
         expect(elmb.closeEnd).toEqual({line: 2, column: 9});
     });
 
+    it('should record positions of attributes', function() {
+        var doc = new DOMParser().parseFromString('<?xml version="1.0"?>\n<xml>\n<test attr="value" /></test></xml>');
+        var elm = doc.getElementsByTagName('test')[0];
+        var attr = elm.attributes[0];
+        expect(attr.name).toBe('attr');
+        expect(attr.value).toBe('value');
+        expect(attr.start).toEqual({line: 2, column: 6});
+        expect(attr.end).toEqual({line: 2, column: 18});
+    });
+
     describe('error handling', function() {
         function errorsFor(source) {
             var doc = new DOMParser().parseFromString(source);
