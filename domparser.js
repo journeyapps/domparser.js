@@ -28,40 +28,51 @@
         return new XMLError(msg, {line: line, column: column});
     }
 
-    /**
-     * Performs a binary search on the host array. This method can either be
-     * injected into Array.prototype or called with a specified scope like this:
-     * binaryIndexOf.call(someArray, searchElement);
-     *
-     * source: http://oli.me.uk/2013/06/08/searching-javascript-arrays-with-a-binary-search/
-     *
-     * @param {*} searchElement The item to search for within the array.
-     * @return {Number} The index of the element which defaults to -1 when not found.
-     */
-    function binaryIndexOf(searchElement) {
-        'use strict';
 
-        var minIndex = 0;
-        var maxIndex = this.length - 1;
-        var currentIndex;
-        var currentElement;
 
-        while (minIndex <= maxIndex) {
-            currentIndex = (minIndex + maxIndex) / 2 | 0;
-            currentElement = this[currentIndex];
+    function Locator(source) {
+        var linePositions = [-1];
 
-            if (currentElement < searchElement) {
-                minIndex = currentIndex + 1;
-            }
-            else if (currentElement > searchElement) {
-                maxIndex = currentIndex - 1;
-            }
-            else {
-                return currentIndex;
+        for(var i = 0; i < source.length; i++) {
+            if(source[i] == '\n') {
+                linePositions.push(i);
             }
         }
 
-        return currentIndex;
+        linePositions.push(source.length);
+
+        function bisectLeft(array, searchElement) {
+            var low = 0;
+            var high = array.length;
+
+            while (high > low) {
+                var guess = (low + high) / 2 | 0;
+
+                if(searchElement > array[guess]) {
+                    low = guess + 1;
+                } else {
+                    high = guess;
+                }
+            }
+
+            return low;
+        }
+
+        this.position = function(index) {
+            if(index > source.length) {
+                return {line: linePositions.length - 1, column: 0};
+            } else if(index < 0) {
+                return {line: 0, column: 0};
+            }
+
+            var line = bisectLeft(linePositions, index) - 1;
+            var col = index - linePositions[line] - 1;
+
+            return {
+                line: line,
+                column: col
+            };
+        };
     }
 
     function DOMParser(options) {
@@ -69,35 +80,14 @@
         var trackPosition = options.position !== false;
 
         this.parseFromString = function(source) {
-            var linePositions = [0];
-
-            if(trackPosition) {
-                for(var i = 0; i < source.length; i++) {
-                    if(source[i] == '\n') {
-                        linePositions.push(i);
-                    }
-                }
-            }
-
-            linePositions.push(source.length);
-
-            function getPosition(index) {
-                var line;
-
-                line = binaryIndexOf.call(linePositions, index) - 1;
-
-                var col = index - linePositions[line] - 1;
-
-                return {
-                    line: line,
-                    column: col
-                };
-            }
-
             var parser = sax.parser(true, {xmlns: true, position: trackPosition});
             var errors = [];
             var doc = document.implementation.createDocument(null, null, null);
             var current = doc;
+
+            if(trackPosition) {
+                doc.locator = new Locator(source);
+            }
 
             // Events we ignore:
             //   Not present in the documents we're interested in:
@@ -138,8 +128,8 @@
             parser.onopentag = function (node) {
                 var element = doc.createElementNS(node.uri, node.name);
                 if(trackPosition) {
-                    element.openStart = getPosition(parser.startTagPosition - 1);
-                    element.openEnd = {line: parser.line, column: parser.column};
+                    element.openStart = parser.startTagPosition - 1;
+                    element.openEnd = parser.position;
                 }
 
                 try {
@@ -155,8 +145,8 @@
                         var attribute = doc.createAttributeNS(attr.uri, attr.name);
                         attribute.value = attr.value;
                         if(trackPosition) {
-                            attribute.start = getPosition(attr.start - 1);
-                            attribute.end = getPosition(attr.end);
+                            attribute.start = attr.start - 1;
+                            attribute.end = attr.end;
                         }
                         element.setAttributeNodeNS(attribute);
                     }
@@ -170,8 +160,8 @@
 
             parser.onclosetag = function() {
                 if(trackPosition) {
-                    current.closeStart = getPosition(parser.startTagPosition - 1);
-                    current.closeEnd = {line: parser.line, column: parser.column};
+                    current.closeStart = parser.startTagPosition - 1;
+                    current.closeEnd = parser.position;
                 }
 
                 current = current.parentNode;
@@ -232,4 +222,5 @@
 
     domparser.DOMParser = DOMParser;
     domparser.XMLSerializer = XMLSerializer;
+    domparser.Locator = Locator;
 })(domparser = {});
