@@ -28,29 +28,73 @@
         return new XMLError(msg, {line: line, column: column});
     }
 
-    function DOMParser() {
-        this.parseFromString = function(source) {
-            function getPosition(index) {
-                // Very inefficient, but can be optimized later.
+    /**
+     * Performs a binary search on the host array. This method can either be
+     * injected into Array.prototype or called with a specified scope like this:
+     * binaryIndexOf.call(someArray, searchElement);
+     *
+     * source: http://oli.me.uk/2013/06/08/searching-javascript-arrays-with-a-binary-search/
+     *
+     * @param {*} searchElement The item to search for within the array.
+     * @return {Number} The index of the element which defaults to -1 when not found.
+     */
+    function binaryIndexOf(searchElement) {
+        'use strict';
 
-                var line = 0;
-                var col = 0;
-                for(var i = 0; i < index; i++) {
-                    var ch = source[i];
-                    if(ch == '\n') {
-                        line += 1;
-                        col = 0;
-                    } else {
-                        col += 1;
+        var minIndex = 0;
+        var maxIndex = this.length - 1;
+        var currentIndex;
+        var currentElement;
+
+        while (minIndex <= maxIndex) {
+            currentIndex = (minIndex + maxIndex) / 2 | 0;
+            currentElement = this[currentIndex];
+
+            if (currentElement < searchElement) {
+                minIndex = currentIndex + 1;
+            }
+            else if (currentElement > searchElement) {
+                maxIndex = currentIndex - 1;
+            }
+            else {
+                return currentIndex;
+            }
+        }
+
+        return currentIndex;
+    }
+
+    function DOMParser(options) {
+        options = options || {};
+        var trackPosition = options.position !== false;
+
+        this.parseFromString = function(source) {
+            var linePositions = [0];
+
+            if(trackPosition) {
+                for(var i = 0; i < source.length; i++) {
+                    if(source[i] == '\n') {
+                        linePositions.push(i);
                     }
                 }
+            }
+
+            linePositions.push(source.length);
+
+            function getPosition(index) {
+                var line;
+
+                line = binaryIndexOf.call(linePositions, index) - 1;
+
+                var col = index - linePositions[line] - 1;
+
                 return {
                     line: line,
                     column: col
                 };
             }
 
-            var parser = sax.parser(true, {xmlns: true});
+            var parser = sax.parser(true, {xmlns: true, position: trackPosition});
             var errors = [];
             var doc = document.implementation.createDocument(null, null, null);
             var current = doc;
@@ -93,8 +137,10 @@
 
             parser.onopentag = function (node) {
                 var element = doc.createElementNS(node.uri, node.name);
-                element.openStart = getPosition(parser.startTagPosition - 1);
-                element.openEnd = {line: parser.line, column: parser.column};
+                if(trackPosition) {
+                    element.openStart = getPosition(parser.startTagPosition - 1);
+                    element.openEnd = {line: parser.line, column: parser.column};
+                }
 
                 try {
                 for(var key in node.attributes) {
@@ -108,8 +154,10 @@
                     } else {
                         var attribute = doc.createAttributeNS(attr.uri, attr.name);
                         attribute.value = attr.value;
-                        attribute.start = getPosition(attr.start - 1);
-                        attribute.end = getPosition(attr.end);
+                        if(trackPosition) {
+                            attribute.start = getPosition(attr.start - 1);
+                            attribute.end = getPosition(attr.end);
+                        }
                         element.setAttributeNodeNS(attribute);
                     }
                 }
@@ -121,8 +169,10 @@
             };
 
             parser.onclosetag = function() {
-                current.closeStart = getPosition(parser.startTagPosition - 1);
-                current.closeEnd = {line: parser.line, column: parser.column};
+                if(trackPosition) {
+                    current.closeStart = getPosition(parser.startTagPosition - 1);
+                    current.closeEnd = {line: parser.line, column: parser.column};
+                }
 
                 current = current.parentNode;
             };

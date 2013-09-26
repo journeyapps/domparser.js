@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<view title="Demo">
+  <var type="string" name="text" spec="number.za_id"/>
+  <var type="attachment" name="picture" media="image/jpeg"/>
+  <sidebar>
+    <item state="normal">First</item>
+    <item state="active">Second</item>
+    <item state="disabled">Third</item>
+  </sidebar>
+  <heading>Embark Platform Demo</heading>
+  <info>This demonstrates some of the basic components.</info>
+  <textinput bind="text" label="ID Number"/>
+  <button label="Validate"/>
+  <heading>Address</heading>
+  <table>
+    <info label="Street" value="16 Elektron Street"/>
+    <info label="City" value="Stellenbosch"/>
+    <info label="Postal Code" value="7600"/>
+  </table>
+  <picture bind="picture"/>
+  <view title="Demo" native="Sidebar">
+    <var type="string" name="text" spec="number.za_id"/>
+    <var type="attachment" name="picture" media="image/jpeg"/>
+    <sidebar>
+      <item state="normal">First</item>
+      <item state="active">Second</item>
+      <item state="disabled">Third</item>
+    </sidebar>
+    <heading>Embark Platform Demo</heading>
+    <info>This demonstrates some of the basic components.</info>
+    <textinput bind="text" label="ID Number"/>
+    <button label="Validate"/>
+    <heading>Address</heading>
+    <table>
+      <info label="Street" value="16 Elektron Street"/>
+      <info label="City" value="Stellenbosch"/>
+      <info label="Postal Code" value="7600"/>
+    </table>
+    <picture bind="picture"/>
+    <view title="Demo" native="Sidebar">
+      <var type="string" name="text" spec="number.za_id"/>
+      <var type="attachment" name="picture" media="image/jpeg"/>
+      <sidebar>
+        <item state="normal">First</item>
+        <item state="active">Second</item>
+        <item state="disabled">Third</item>
+      </sidebar>
+      <heading>Embark Platform Demo</heading>
+      <info>This demonstrates some of the basic components.</info>
+      <textinput bind="text" label="ID Number"/>
+      <button label="Validate"/>
+      <heading>Address</heading>
+      <table>
+        <info label="Street" value="16 Elektron Street"/>
+        <info label="City" value="Stellenbosch"/>
+        <info label="Postal Code" value="7600"/>
+      </table>
+      <picture bind="picture"/>
+      <view title="Demo" native="Sidebar">
+        <var type="string" name="text" spec="number.za_id"/>
+        <var type="attachment" name="picture" media="image/jpeg"/>
+        <sidebar>
+          <item state="normal">First</item>
+          <item state="active">Second</item>
+          <item state="disabled">Third</item>
+        </sidebar>
+        <heading>Embark Platform Demo</heading>
+        <info>This demonstrates some of the basic components.</info>
+        <textinput bind="text" label="ID Number"/>
+        <button label="Validate"/>
+        <heading>Address</heading>
+        <table>
+          <info label="Street" value="16 Elektron Street"/>
+          <info label="City" value="Stellenbosch"/>
+          <info label="Postal Code" value="7600"/>
+        </table>
+        <picture bind="picture"/>
+        <view title="Demo" native="Sidebar">
+          <var type="string" name="text" spec="number.za_id"/>
+          <var type="attachment" name="picture" media="image/jpeg"/>
+          <sidebar>
+            <item state="normal">First</item>
+            <item state="active">Second</item>
+            <item state="disabled">Third</item>
+          </sidebar>
+          <heading>Embark Platform Demo</heading>
+          <info>This demonstrates some of the basic components.</info>
+          <textinput bind="text" label="ID Number"/>
+          <button label="Validate"/>
+          <heading>Address</heading>
+          <table>
+            <info label="Street" value="16 Elektron Street"/>
+            <info label="City" value="Stellenbosch"/>
+            <info label="Postal Code" value="7600"/>
+          </table>
+          <picture bind="picture"/>
+          <view title="Demo" native="Sidebar">
+            <var type="string" name="text" spec="number.za_id"/>
+            <var type="attachment" name="picture" media="image/jpeg"/>
+            <sidebar>
+              <item state="normal">First</item>
+              <item state="active">Second</item>
+              <item state="disabled">Third</item>
+            </sidebar>
+            <heading>Embark Platform Demo</heading>
+            <info>This demonstrates some of the basic components.</info>
+            <textinput bind="text" label="ID Number"/>
+            <button label="Validate"/>
+            <heading>Address</heading>
+            <table>
+              <info label="Street" value="16 Elektron Street"/>
+              <info label="City" value="Stellenbosch"/>
+              <info label="Postal Code" value="7600"/>
+            </table>
+            <picture bind="picture"/>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

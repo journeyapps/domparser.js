@@ -3,10 +3,14 @@ module.exports = function(config) {
         basePath: '',
 
         preprocessors: {
+            '**/*.xml': ['html2js']
         },
 
         files: [
+            'test/*.xml',
+
             'vendor/sax.js',
+            'vendor/benchmark.js',
             'domparser.js',
 
             'test/matchers.js',
@@ -39,6 +43,6 @@ module.exports = function(config) {
         //  * Opera
         //
         // For more details, see https://testacular.readthedocs.org/en/latest/user/browsers/
-        browsers: ['PhantomJS', 'Chrome']
+        browsers: ['Chrome']
     });
 };
