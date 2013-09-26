@@ -129,6 +129,8 @@
                 var element = doc.createElementNS(node.uri, node.name);
                 if(trackPosition) {
                     element.openStart = parser.startTagPosition - 1;
+                    element.nameStart = element.openStart + 1;
+                    element.nameEnd = element.nameStart + node.name.length;
                     element.openEnd = parser.position;
                 }
 
@@ -147,6 +149,8 @@
                         if(trackPosition) {
                             attribute.start = attr.start - 1;
                             attribute.end = attr.end;
+                            attribute.nameEnd = attribute.start + attr.name.length;
+                            attribute.valueStart = attribute.nameEnd + 1;   // NOT always correct
                         }
                         element.setAttributeNodeNS(attribute);
                     }
