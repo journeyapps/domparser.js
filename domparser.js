@@ -149,7 +149,7 @@
                         if(trackPosition) {
                             attribute.start = attr.start - 1;
                             attribute.end = attr.end;
-                            attribute.nameEnd = attribute.start + attr.name.length;
+                            attribute.nameEnd = attribute.start + (attr.name == null ? 0 : attr.name.length);
                             attribute.valueStart = attribute.nameEnd + 1;   // NOT always correct
                         }
                         element.setAttributeNodeNS(attribute);

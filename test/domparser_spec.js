@@ -162,6 +162,13 @@ describe('DOMParser', function() {
             var errors = errorsFor('<?xml version="notsupported"?><xml></xml>');
             expect(errors.length).toBe(1);
         });
+
+        it('should handle an attribute without a value', function() {
+            var xml = '<test t />';
+            var errors = errorsFor(xml);
+            expect(errors).toEqual([{message: 'Invalid attribute name', line: 0, column: 9}]);
+
+        });
     });
 
 });
