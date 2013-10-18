@@ -132,6 +132,7 @@
                     element.nameStart = element.openStart + 1;
                     element.nameEnd = element.nameStart + node.name.length;
                     element.openEnd = parser.position;
+                    element.attributePositions = {};
                 }
 
                 try {
@@ -147,10 +148,13 @@
                         var attribute = doc.createAttributeNS(attr.uri, attr.name);
                         attribute.value = attr.value;
                         if(trackPosition) {
-                            attribute.start = attr.start - 1;
-                            attribute.end = attr.end;
-                            attribute.nameEnd = attribute.start + (attr.name == null ? 0 : attr.name.length);
-                            attribute.valueStart = attribute.nameEnd + 1;   // NOT always correct
+                            var position = {
+                                start: attr.start - 1,
+                                end: attr.end
+                            };
+                            position.nameEnd = position.start + (attr.name == null ? 0 : attr.name.length);
+                            position.valueStart = position.nameEnd + 1; // NOT always correct
+                            element.attributePositions[attr.name] = position;
                         }
                         element.setAttributeNodeNS(attribute);
                     }

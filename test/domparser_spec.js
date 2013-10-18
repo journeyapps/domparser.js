@@ -110,8 +110,11 @@ describe('DOMParser', function() {
         var attr = elm.attributes[0];
         expect(attr.name).toBe('attr');
         expect(attr.value).toBe('value');
-        expect(attr.start).toEqual(34);
-        expect(attr.end).toEqual(46);
+        var position = elm.attributePositions.attr;
+        expect(position.start).toEqual(34);
+        expect(position.end).toEqual(46);
+        expect(position.nameEnd).toEqual(38);
+        expect(position.valueStart).toEqual(39);
     });
 
     describe('error handling', function() {
