@@ -40,38 +40,16 @@ module.exports = function(grunt) {
                 browsers: ['PhantomJS', 'Firefox'],
                 reporters: 'dots'
             },
-            sauce1: {
+            sauce: {
                 configFile: 'karma-sauce.conf.js',
-                browsers: ['SL_IE_9', 'SL_IE_10']
+                browsers: ['SL_IE_9', 'SL_IE_10', 'SL_Chrome', 'SL_Safari']
             },
-            sauce2: {
+            ios: {
+                // Not reliable.
                 configFile: 'karma-sauce.conf.js',
-                browsers: ['SL_Chrome', 'SL_Safari']
+                browsers: ['SL_IPHONE']
             }
         }
-    });
-
-    // Run multiple tests serially, but continue if one of them fails.
-    // Adapted from http://stackoverflow.com/questions/16487681/gruntfile-getting-error-codes-from-programs-serially
-    grunt.registerTask('serialsauce', function() {
-        var done = this.async();
-        var tasks = {'karma:sauce1': 0, 'karma:sauce2': 0};
-        var success = true;
-        grunt.util.async.forEachSeries(Object.keys(tasks), function(task, next) {
-            grunt.util.spawn({
-                grunt: true,  // use grunt to spawn
-                args: [task], // spawn this task
-                opts: { stdio: 'inherit' } // print to the same stdout
-            }, function(err, result, code) {
-                tasks[task] = code;
-                if(code !== 0) {
-                    success = false;
-                }
-                next();
-            });
-        }, function() {
-            done(success);
-        });
     });
 
     // Default task.

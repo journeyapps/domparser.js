@@ -31,10 +31,10 @@ module.exports = function(config) {
 
         colors: true,
 
-        reporters: ['dots'],
+        reporters: ['dots', 'saucelabs'],
 
         // If browser does not capture in given timeout [ms], kill it
-        captureTimeout: 10000,
+        captureTimeout: 60000,
 
         sauceLabs: {
             username: process.env.SAUCE_USERNAME,
@@ -81,8 +81,8 @@ module.exports = function(config) {
             'SL_IPHONE': {
                 base: 'SauceLabs',
                 browserName: "iphone",
-                platform: "Mac 10.8",
-                version: "6"
+                platform: "OS X 10.9",
+                version: "7.1"
             }
         },
 
