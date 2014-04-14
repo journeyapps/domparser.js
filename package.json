@@ -20,11 +20,12 @@
     "grunt-karma": "~0.8.2",
     "grunt-contrib-jshint": "~0.6.4",
     "grunt": "~0.4.1",
+    "karma": "~0.12.9",
     "karma-phantomjs-launcher": "~0.1.0",
     "karma-script-launcher": "~0.1.0",
     "karma-firefox-launcher": "~0.1.0",
-    "karma": "~0.12.9",
     "karma-chrome-launcher": "~0.1.0",
-    "karma-sauce-launcher": "~0.2.7"
+    "karma-sauce-launcher": "~0.2.7",
+    "karma-html2js-preprocessor": "~0.1"
   }
 }
