@@ -135,35 +135,29 @@
                     element.attributePositions = {};
                 }
 
-                try {
                 for(var key in node.attributes) {
                     var attr = node.attributes[key];
-                    if(attr.local === '') {
-                        // This happens for the attribute `xmlns="http://www.w3.org/2001/XMLSchema"`:
-                        // {name: 'xmlns', value: 'http://www.w3.org/2001/XMLSchema', prefix: 'xmlns', local: '', uri: 'http://www.w3.org/2000/xmlns/'
-                        // While doc.createAttributeNS works for this case in Firefox and Chrome, it fails in PhantomJS.
-                        // It's ok to simply not record positioning info in this case.
-                        element.setAttributeNS(attr.uri, attr.name, attr.value);
-                    } else {
-                        var attribute = doc.createAttributeNS(attr.uri, attr.name);
-                        attribute.value = attr.value;
-                        if(trackPosition) {
-                            var position = {
-                                start: attr.start - 1,
-                                end: attr.end
-                            };
-                            position.nameEnd = position.start + (attr.name == null ? 0 : attr.name.length);
-                            position.valueStart = position.nameEnd + 1; // NOT always correct
-                            element.attributePositions[attr.name] = position;
-                        }
-                        element.setAttributeNodeNS(attribute);
+                    // Attribute nodes seem to be deprecated in general.
+                    // doc.createAttributeNS does not work for some cases in PhantomJS, e.g.
+                    //   `xmlns="http://www.w3.org/2001/XMLSchema"`:
+                    //   {name: 'xmlns', value: 'http://www.w3.org/2001/XMLSchema', prefix: 'xmlns', local: '', uri: 'http://www.w3.org/2000/xmlns/'
+                    // Also, it was removed in Chrome 34.
+                    // Custom attributes on nodes also disappear sometimes in Chrome.
+                    // The solution is to store the attribute positions on the element node.
+                    if(trackPosition) {
+                        var position = {
+                            start: attr.start - 1,
+                            end: attr.end
+                        };
+                        position.nameEnd = position.start + (attr.name == null ? 0 : attr.name.length);
+                        position.valueStart = position.nameEnd + 1; // NOT always correct
+                        // This does not take the URI into account
+                        element.attributePositions[attr.name] = position;
                     }
+                    element.setAttributeNS(attr.uri, attr.name, attr.value);
                 }
                 current.appendChild(element);
                 current = element;
-                } catch(err) {
-                    console.error(err);
-                }
             };
 
             parser.onclosetag = function() {
