@@ -791,7 +791,12 @@ function attrib(parser) {
     // defer onattribute events until all attributes have been seen
     // so any new bindings can take effect. preserve attribute order
     // so deferred events can be emitted in document order
-    parser.attribList.push([parser.attribName, parser.attribValue]);
+    parser.attribList.push([
+      parser.attribName,
+      parser.attribValue,
+      parser.startAttributePosition,
+      parser.position
+    ]);
   } else {
     // in non-xmlns mode, we can emit the event right away
     parser.tag.attributes[parser.attribName] = parser.attribValue;
@@ -840,6 +845,8 @@ function openTag(parser, selfClosing) {
       var nv = parser.attribList[i];
       var name = nv[0];
       var value = nv[1];
+      var start = nv[2];
+      var end = nv[3];
       var qualName = qname(name, true);
       var prefix = qualName.prefix;
       var local = qualName.local;
@@ -849,7 +856,9 @@ function openTag(parser, selfClosing) {
         value: value,
         prefix: prefix,
         local: local,
-        uri: uri
+        uri: uri,
+        start: start,
+        end: end
       };
 
       // if there's any attributes with an undefined namespace,
@@ -1360,6 +1369,7 @@ function write(chunk) {
         } else if (c === '/') {
           parser.state = S.OPEN_TAG_SLASH;
         } else if (isMatch(nameStart, c)) {
+          parser.startAttributePosition = parser.position;
           parser.attribName = c;
           parser.attribValue = '';
           parser.state = S.ATTRIB_NAME;
@@ -1402,6 +1412,7 @@ function write(chunk) {
           if (c === '>') {
             openTag(parser);
           } else if (isMatch(nameStart, c)) {
+            parser.startAttributePosition = parser.position;
             parser.attribName = c;
             parser.state = S.ATTRIB_NAME;
           } else {
@@ -1621,4 +1632,4 @@ if (!String.fromCodePoint) {
   })();
 }
 
-exports.sax = sax;
+module.exports = sax;

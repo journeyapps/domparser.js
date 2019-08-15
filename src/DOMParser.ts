@@ -1,6 +1,6 @@
 import { XMLError, errorFromParser } from './XMLError';
 
-import * as sax from 'sax';
+import * as sax from './vendor/sax';
 import * as native from './xmldom';
 import { XMLElement } from './XMLElement';
 import { XMLDocument } from './XMLDocument';
@@ -17,6 +17,9 @@ function getMatch(re: RegExp, pos: number, str: string) {
 }
 
 function errorFromMessage(message: string) {
+  if (typeof message != 'string') {
+    throw message;
+  }
   var msg = message.split('\n')[0];
   var line = parseInt(getMatch(/Line: (\d+)/, 1, message), 10);
   var column = parseInt(getMatch(/Column: (\d+)/, 1, message), 10);
@@ -113,8 +116,8 @@ export class DOMParser implements globalThis.DOMParser {
         // Custom attributes on nodes also disappear sometimes in Chrome.
         // The solution is to store the attribute positions on the element node.
         var position: XMLAttributePosition = {
-          start: attr.start - 1,
-          end: attr.end,
+          start: (attr as any).start - 1,
+          end: (attr as any).end,
           nameEnd: 0,
           valueStart: 0
         };
@@ -123,7 +126,7 @@ export class DOMParser implements globalThis.DOMParser {
         position.valueStart = position.nameEnd + 1; // NOT always correct
         // This does not take the URI into account
         element.attributePositions[attr.name] = position;
-        element.setAttributeNS(attr.uri, attr.name, attr.value);
+        element.setAttributeNS(attr.uri, attr.name || '.', attr.value);
       }
       current.appendChild(element);
       current = element;

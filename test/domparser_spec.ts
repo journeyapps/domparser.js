@@ -203,7 +203,7 @@ describe('DOMParser', function() {
       var xml = '<test t />';
       var errors = errorsFor(xml);
       expect(errors).toEqual([
-        { message: 'Invalid attribute name', line: 0, column: 9 }
+        new XMLError({ message: 'Invalid attribute name', line: 0, column: 9 })
       ]);
     });
   });
