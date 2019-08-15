@@ -82,16 +82,36 @@ describe('DOMParser', function() {
     var elmb = doc.getElementsByTagName('b')[0];
     var elmme = doc.getElementsByTagName('me')[0];
 
-    expect(elmme.openStart).toEqual({ line: 2, column: 0 });
-    expect(elmme.openEnd).toEqual({ line: 2, column: 4 });
-    expect(elmme.closeStart).toEqual({ line: 2, column: 9 });
-    expect(elmme.closeEnd).toEqual({ line: 2, column: 14 });
+    expect(elmme.openStart).toEqual(29);
+    expect(elmme.openEnd).toEqual(33);
+    expect(doc.locator.position(elmme.openStart)).toEqual({
+      line: 2,
+      column: 0
+    });
+    expect(doc.locator.position(elmme.openEnd)).toEqual({ line: 2, column: 4 });
+    expect(elmme.closeStart).toEqual(38);
+    expect(elmme.closeEnd).toEqual(43);
 
-    expect(elmb.openStart).toEqual({ line: 2, column: 4 });
-    expect(elmb.openEnd).toEqual({ line: 2, column: 9 });
+    expect(elmb.openStart).toEqual(33);
+    expect(elmb.openEnd).toEqual(38);
     // Self-closing tag
-    expect(elmb.closeStart).toEqual({ line: 2, column: 4 });
-    expect(elmb.closeEnd).toEqual({ line: 2, column: 9 });
+    expect(elmb.closeStart).toEqual(33);
+    expect(elmb.closeEnd).toEqual(38);
+  });
+
+  it('should record positions of attributes', function() {
+    var doc = new DOMParser().parseFromString(
+      '<?xml version="1.0"?>\n<xml>\n<test attr="value" /></test></xml>'
+    );
+    var elm = doc.getElementsByTagName('test')[0];
+    var attr = elm.attributes[0];
+    expect(attr.name).toBe('attr');
+    expect(attr.value).toBe('value');
+    var position = elm.attributePositions.attr;
+    expect(position.start).toEqual(34);
+    expect(position.end).toEqual(46);
+    expect(position.nameEnd).toEqual(38);
+    expect(position.valueStart).toEqual(39);
   });
 
   describe('error handling', function() {
@@ -177,6 +197,14 @@ describe('DOMParser', function() {
       // This check is not implemented yet
       var errors = errorsFor('<?xml version="notsupported"?><xml></xml>');
       expect(errors.length).toBe(1);
+    });
+
+    it('should handle an attribute without a value', function() {
+      var xml = '<test t />';
+      var errors = errorsFor(xml);
+      expect(errors).toEqual([
+        { message: 'Invalid attribute name', line: 0, column: 9 }
+      ]);
     });
   });
 });

@@ -1,6 +1,6 @@
 import { XMLPosition } from './XMLPosition';
 
-export class PositionTracker {
+export class XMLLocator {
   source: string;
   cumulative: number[];
 
@@ -14,7 +14,7 @@ export class PositionTracker {
   /**
    * From a source index, return line and column numbers, 0-based.
    */
-  getPosition(index: number): XMLPosition {
+  position(index: number): XMLPosition {
     return this.getPositionBisect(index);
   }
 
@@ -24,7 +24,13 @@ export class PositionTracker {
    * Performance is O(log(L)), where L is the number of lines in the source.
    */
   getPositionBisect(index: number) {
+    if (index >= this.cumulative[this.cumulative.length - 1]) {
+      return { line: this.cumulative.length - 1, column: 0 };
+    }
     const line = bisectRight(this.cumulative, index) - 1;
+    if (line < 0) {
+      return { line: 0, column: 0 };
+    }
     return { line: line, column: index - this.cumulative[line] };
   }
 
@@ -38,6 +44,12 @@ export class PositionTracker {
     var line = 0;
     var col = 0;
     for (var i = 0; i < index; i++) {
+      if (i == source.length) {
+        return {
+          line: line + 1,
+          column: 0
+        };
+      }
       var ch = source[i];
       if (ch == '\n') {
         line += 1;
