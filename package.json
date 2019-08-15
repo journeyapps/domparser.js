@@ -8,8 +8,8 @@
     "build": "tsc",
     "test": "ts-node node_modules/jasmine/bin/jasmine test/*_spec.ts",
     "test:browsers": "karma start --single-run",
-    "pretty": "prettier --write '**/*.ts'",
-    "lint": "prettier --check '**/*.ts'",
+    "pretty": "prettier --write '**/*.{ts,js}'",
+    "lint": "prettier --check '**/*.{ts,js}'",
     "benchmark": "node benchmark/benchmark.js"
   },
   "dependencies": {
