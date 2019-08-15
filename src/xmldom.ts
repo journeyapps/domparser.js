@@ -35,8 +35,16 @@ function isElement(e: Node): e is Element {
   return e.nodeType == 1;
 }
 
+/**
+ * Custom implementation of https://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-isEqualNode
+ *
+ * xmldom only implements DOM level 2, which doesn't contain this function.
+ */
 export function isEqualNode(a: Node, b: Node): boolean {
-  // https://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-isEqualNode
+  if (typeof a.isEqualNode == 'function') {
+    // Use the native version when available
+    return a.isEqualNode(b);
+  }
   if (b.nodeType != a.nodeType) {
     return false;
   }
