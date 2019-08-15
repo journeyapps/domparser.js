@@ -1,7 +1,3 @@
-dist
-tools/spec
-tools/defs
-tmp
 lib
 .idea
 .vscode

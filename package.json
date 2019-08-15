@@ -1,12 +1,15 @@
 {
-  "name": "domparser",
+  "name": "@journeyapps/domparser",
   "description": "Basic XML DOM parsing",
   "version": "0.0.1",
   "license": "MIT",
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "ts-node node_modules/jasmine/bin/jasmine test/*_spec.js"
+    "test": "ts-node node_modules/jasmine/bin/jasmine test/*_spec.ts",
+    "test:browsers": "karma start --single-run",
+    "pretty": "prettier --write '**/*.ts'",
+    "lint": "prettier --check '**/*.ts'"
   },
   "dependencies": {
     "sax": "^1.2.4"
@@ -16,6 +19,12 @@
     "@types/sax": "^1.2.0",
     "@types/xmldom": "^0.1.29",
     "jasmine": "^3.4.0",
+    "karma": "^4.2.0",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-firefox-launcher": "^1.2.0",
+    "karma-jasmine": "^2.0.1",
+    "karma-spec-reporter": "^0.0.32",
+    "karma-typescript": "^4.1.1",
     "prettier": "^1.18.2",
     "ts-node": "^8.3.0",
     "typescript": "^3.5.3",

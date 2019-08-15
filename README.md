@@ -15,17 +15,17 @@ reporting.
 
 ## Usage
 
-    const domparser = require('@journeyapps/domparser');
-    var doc = new domparser.DOMParser().parseFromString("<test>xml</test>");
+    const { DOMParser } = require('@journeyapps/domparser');
+    var doc = new DOMParser().parseFromString("<test>xml</test>");
 
-## Supported browsers
+## Supported environments
 
-Tested on recent versions of Chrome, Firefox and Safari, and on IE 9 and 10. Does not work on IE 8 and below.
+Should work on any browser that supports ES6.
 
-Tested with the help of [Travis](https://travis-ci.org/journeyapps/domparser.js) and [SauceLabs](https://saucelabs.com/u/rkistner).
+Tested on recent versions of Node, Chrome and Firefox.
 
-[![Build Status](https://travis-ci.org/journeyapps/domparser.js.png?branch=master)](https://travis-ci.org/journeyapps/domparser.js)
+When running in Node, a recent version of xmldom is required.
 
 # License
 
-All files in this project are under the MIT license.
+All files in this project are licensed under the MIT license.

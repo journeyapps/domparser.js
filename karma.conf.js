@@ -1,44 +1,30 @@
-module.exports = function(config) {
-    config.set({
-        basePath: '',
-
-        preprocessors: {
-        },
-
-        files: [
-            'vendor/sax.js',
-            'domparser.js',
-
-            'test/matchers.js',
-            'test/*.js'
-        ],
-
-        frameworks: ['jasmine'],
-
-        // web server port
-        port: 8080,
-
-        // cli runner port
-        runnerPort: 9100,
-
-        autoWatch: true,
-
-        colors: true,
-
-        reporters: ['progress'],
-
-        // If browser does not capture in given timeout [ms], kill it
-        captureTimeout: 10000,
-
-        // Use PhantomJS by default - allow the tests to be run without a browser window. Can also use any of the following
-        // if you don't want to install PhantomJS, or want to test the code in a specific browser:
-        //  * Chrome
-        //  * ChromeCanary
-        //  * Safari
-        //  * Firefox
-        //  * Opera
-        //
-        // For more details, see https://testacular.readthedocs.org/en/latest/user/browsers/
-        browsers: ['PhantomJS', 'Chrome']
-    });
+module.exports = config => {
+  config.set({
+    frameworks: ['jasmine', 'karma-typescript'],
+    plugins: [
+      'karma-jasmine',
+      'karma-chrome-launcher',
+      'karma-firefox-launcher',
+      'karma-typescript',
+      'karma-spec-reporter'
+    ],
+    karmaTypescriptConfig: {
+      tsconfig: './tsconfig.karma.json'
+    },
+    client: {
+      // leave Jasmine Spec Runner output visible in browser
+      clearContext: false
+    },
+    files: [{ pattern: 'src/**/*.ts' }, { pattern: 'test/**/*.ts' }],
+    preprocessors: {
+      'src/**/*.ts': ['karma-typescript'],
+      'test/**/*.ts': ['karma-typescript']
+    },
+    reporters: ['spec', 'karma-typescript'],
+    colors: true,
+    logLevel: config.LOG_INFO,
+    autoWatch: true,
+    browsers: ['Chrome', 'Firefox'],
+    singleRun: true
+  });
 };
