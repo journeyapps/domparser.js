@@ -4,6 +4,7 @@ import * as sax from 'sax';
 import * as native from './xmldom';
 import { XMLElement } from './XMLElement';
 import { XMLDocument } from './XMLDocument';
+import { PositionTracker } from './PositionTracker';
 
 function getMatch(re: RegExp, pos: number, str: string) {
   var match = re.exec(str);
@@ -36,25 +37,7 @@ export class DOMParser implements globalThis.DOMParser {
   }
 
   parseFromString(source: string): XMLDocument {
-    function getPosition(index: number) {
-      // Very inefficient, but can be optimized later.
-
-      var line = 0;
-      var col = 0;
-      for (var i = 0; i < index; i++) {
-        var ch = source[i];
-        if (ch == '\n') {
-          line += 1;
-          col = 0;
-        } else {
-          col += 1;
-        }
-      }
-      return {
-        line: line,
-        column: col
-      };
-    }
+    const tracker = new PositionTracker(source);
 
     const parser = sax.parser(true, { xmlns: true });
     let errors: XMLError[] = [];
@@ -111,7 +94,7 @@ export class DOMParser implements globalThis.DOMParser {
 
     parser.onopentag = function(node: sax.QualifiedTag) {
       var element = doc.createElementNS(node.uri, node.name) as XMLElement;
-      element.openStart = getPosition(parser.startTagPosition - 1);
+      element.openStart = tracker.getPosition(parser.startTagPosition - 1);
       element.openEnd = { line: parser.line, column: parser.column };
 
       // We have: parser.line, parser.column, parser.position, parser.startTagPosition
@@ -125,7 +108,9 @@ export class DOMParser implements globalThis.DOMParser {
 
     parser.onclosetag = function() {
       let currentElement = current as XMLElement;
-      currentElement.closeStart = getPosition(parser.startTagPosition - 1);
+      currentElement.closeStart = tracker.getPosition(
+        parser.startTagPosition - 1
+      );
       currentElement.closeEnd = { line: parser.line, column: parser.column };
 
       current = current.parentNode;

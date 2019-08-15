@@ -10,3 +10,4 @@ jobs:
       - run: yarn build
       - run: yarn test
       - run: yarn test:browsers
+      - run: yarn benchmark
