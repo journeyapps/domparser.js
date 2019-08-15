@@ -3,9 +3,9 @@ let ourXMLSerializer: typeof XMLSerializer;
 let implementation: DOMImplementation;
 
 if (typeof window != 'undefined') {
-  (implementation = document.implementation),
-    (ourDOMParser = DOMParser),
-    (XMLSerializer = XMLSerializer);
+  implementation = document.implementation;
+  ourDOMParser = DOMParser;
+  ourXMLSerializer = XMLSerializer;
 } else {
   // @ts-ignore
   const xmldom = require('xmldom');

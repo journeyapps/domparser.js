@@ -3,6 +3,7 @@
   "description": "Basic XML DOM parsing",
   "version": "0.0.1",
   "license": "MIT",
+  "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
     "test": "jasmine test/*_spec.js"

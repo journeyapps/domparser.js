@@ -1,25 +1,11 @@
-const sax = require('sax');
-const native = require('./lib/xmldom');
+import { XMLError, errorFromParser } from './XMLError';
 
-function XMLError(message, position) {
-  if (typeof message == 'string') {
-    this.message = message;
-    this.line = position.line;
-    this.column = position.column;
-  } else {
-    this.message = message.message;
-    this.line = message.line;
-    this.column = message.column;
-  }
-}
+import * as sax from 'sax';
+import * as native from './xmldom';
+import { XMLElement } from './XMLElement';
+import { XMLDocument } from './XMLDocument';
 
-function errorFromParser(error, parser) {
-  // The message is on the first line
-  // We could parse the position from the message, but it's easier to get it from the parser
-  return new XMLError(error.message.split('\n')[0], parser);
-}
-
-function getMatch(re, pos, str) {
+function getMatch(re: RegExp, pos: number, str: string) {
   var match = re.exec(str);
   if (match) {
     return match[pos];
@@ -28,20 +14,29 @@ function getMatch(re, pos, str) {
   }
 }
 
-function errorFromMessage(message) {
+function errorFromMessage(message: string) {
   var msg = message.split('\n')[0];
   var line = parseInt(getMatch(/Line: (\d+)/, 1, message), 10);
   var column = parseInt(getMatch(/Column: (\d+)/, 1, message), 10);
   return new XMLError(msg, { line: line, column: column });
 }
 
-function DOMParser(options) {
-  options = options || {};
-  if (!options.implementation) {
-    options.implementation = native.implementation;
+export interface DOMParserOptions {
+  implementation: DOMImplementation;
+}
+
+export class DOMParser implements globalThis.DOMParser {
+  private options: DOMParserOptions;
+
+  constructor(options?: Partial<DOMParserOptions>) {
+    this.options = (options || {}) as DOMParserOptions;
+    if (!this.options.implementation) {
+      this.options.implementation = native.implementation;
+    }
   }
-  this.parseFromString = function(source) {
-    function getPosition(index) {
+
+  parseFromString(source: string): XMLDocument {
+    function getPosition(index: number) {
       // Very inefficient, but can be optimized later.
 
       var line = 0;
@@ -61,10 +56,14 @@ function DOMParser(options) {
       };
     }
 
-    var parser = sax.parser(true, { xmlns: true });
-    var errors = [];
-    var doc = options.implementation.createDocument(null, null, null);
-    var current = doc;
+    const parser = sax.parser(true, { xmlns: true });
+    let errors: XMLError[] = [];
+    let doc = this.options.implementation.createDocument(
+      null,
+      null,
+      null
+    ) as XMLDocument;
+    let current: Node = doc;
 
     // Events we ignore:
     //   Not present in the documents we're interested in:
@@ -74,10 +73,10 @@ function DOMParser(options) {
     //   What does it do?
     //    'ready'
 
-    function addUnlessDuplicate(error) {
+    function addUnlessDuplicate(error: XMLError) {
       // Heuristics to filter out duplicates.
       // Would be better to improve the behavior in the SAX parser.
-      var previous = errors[errors.length - 1];
+      const previous = errors[errors.length - 1];
 
       if (
         previous &&
@@ -111,7 +110,7 @@ function DOMParser(options) {
     };
 
     parser.onopentag = function(node) {
-      var element = doc.createElementNS(node.uri, node.name);
+      var element = doc.createElementNS(node.uri, node.name) as XMLElement;
       element.openStart = getPosition(parser.startTagPosition - 1);
       element.openEnd = { line: parser.line, column: parser.column };
 
@@ -125,8 +124,9 @@ function DOMParser(options) {
     };
 
     parser.onclosetag = function() {
-      current.closeStart = getPosition(parser.startTagPosition - 1);
-      current.closeEnd = { line: parser.line, column: parser.column };
+      let currentElement = current as XMLElement;
+      currentElement.closeStart = getPosition(parser.startTagPosition - 1);
+      currentElement.closeEnd = { line: parser.line, column: parser.column };
 
       current = current.parentNode;
     };
@@ -151,10 +151,6 @@ function DOMParser(options) {
       current.appendChild(doc.createComment(comment));
     };
 
-    parser.onend = function() {
-      end = true;
-    };
-
     try {
       parser.write(source).close();
     } catch (err) {
@@ -163,45 +159,5 @@ function DOMParser(options) {
 
     doc.errors = errors;
     return doc;
-  };
-}
-
-function XMLSerializer() {}
-
-function nativeSerializeToString(node) {
-  return new native.XMLSerializer().serializeToString(node);
-}
-
-XMLSerializer.prototype.serializeToString = function(node) {
-  // Whitespace characters between processing instructions are lost, and browsers serialize them differently.
-  // We write these individually, and include newline characters in between them.
-  // Note that our DOMParser is the only one that saves the processing instructions in the DOM, browsers don't do this.
-  if (
-    node.nodeType == node.DOCUMENT_NODE &&
-    node.firstChild &&
-    node.firstChild.nodeType == node.PROCESSING_INSTRUCTION_NODE
-  ) {
-    var children = node.childNodes;
-    var result = '';
-    for (var i = 0; i < children.length; i++) {
-      const child = children[i];
-      if (child.nodeType == child.TEXT_NODE) {
-        continue;
-      }
-      const part = nativeSerializeToString(children[i]);
-      result += part;
-      if (i != children.length - 1) {
-        result += '\n';
-      }
-    }
-    return result;
-  } else {
-    return nativeSerializeToString(node);
   }
-  // TODO: if it is a document without any processing instructions, generate one ourselves
-  // Something like this: <?xml version="1.0" encoding="UTF-8"?>
-};
-
-exports.DOMParser = DOMParser;
-exports.XMLSerializer = XMLSerializer;
-exports.XMLError = XMLError;
+}
