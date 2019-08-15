@@ -35,7 +35,7 @@ function isElement(e: Node): e is Element {
   return e.nodeType == 1;
 }
 
-export function isEqualNode(a: Node, b: Node) {
+export function isEqualNode(a: Node, b: Node): boolean {
   // https://www.w3.org/TR/DOM-Level-3-Core/core.html#Node3-isEqualNode
   if (b.nodeType != a.nodeType) {
     return false;
@@ -56,7 +56,7 @@ export function isEqualNode(a: Node, b: Node) {
 
   if (a.hasChildNodes()) {
     if (a.childNodes.length != b.childNodes.length) {
-      return 'Different number of children';
+      return false;
     }
 
     for (var i = 0; i < a.childNodes.length; i++) {

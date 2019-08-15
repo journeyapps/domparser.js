@@ -109,7 +109,7 @@ export class DOMParser implements globalThis.DOMParser {
       }
     };
 
-    parser.onopentag = function(node) {
+    parser.onopentag = function(node: sax.QualifiedTag) {
       var element = doc.createElementNS(node.uri, node.name) as XMLElement;
       element.openStart = getPosition(parser.startTagPosition - 1);
       element.openEnd = { line: parser.line, column: parser.column };

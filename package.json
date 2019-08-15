@@ -6,15 +6,18 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "jasmine test/*_spec.js"
+    "test": "ts-node node_modules/jasmine/bin/jasmine test/*_spec.js"
   },
   "dependencies": {
     "sax": "^1.2.4"
   },
   "devDependencies": {
+    "@types/jasmine": "^3.4.0",
+    "@types/sax": "^1.2.0",
     "@types/xmldom": "^0.1.29",
     "jasmine": "^3.4.0",
     "prettier": "^1.18.2",
+    "ts-node": "^8.3.0",
     "typescript": "^3.5.3",
     "xmldom": "^0.1.27"
   }
