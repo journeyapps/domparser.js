@@ -1,4 +1,5 @@
 import { XMLLocator } from '../src/XMLLocator';
+import { SlowLocator } from '../src/SlowLocator';
 
 const sampleDoc = `
 Line 1
@@ -10,9 +11,10 @@ Line 1
 describe('PositionTracker', function() {
   it('should calculate the same positions as the naive implementation', function() {
     const tracker = new XMLLocator(sampleDoc);
+    const slowTracker = new SlowLocator(sampleDoc);
     for (let i = 0; i <= sampleDoc.length + 5; i++) {
       const p1 = tracker.position(i);
-      const p2 = tracker.getPositionSlow(i);
+      const p2 = slowTracker.position(i);
 
       expect(p1).toEqual(p2);
     }

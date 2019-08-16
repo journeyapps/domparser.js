@@ -1,32 +1,25 @@
 import { XMLPosition } from './XMLPosition';
 
 export class XMLLocator {
-  source: string;
-  cumulative: number[];
+  private cumulative: number[];
 
   constructor(source: string) {
-    this.source = source;
     if (source == null) {
       throw new Error('source is required');
     }
 
-    const lines = this.source.split('\n').map(line => line.length + 1);
+    const lines = source.split('\n').map(line => line.length + 1);
     this.cumulative = cumulative(lines);
   }
 
   /**
    * From a source index, return line and column numbers, 0-based.
-   */
-  position(index: number): XMLPosition {
-    return this.getPositionBisect(index);
-  }
-
-  /**
+   *
    * Search for a position using a binary search.
    *
    * Performance is O(log(L)), where L is the number of lines in the source.
    */
-  getPositionBisect(index: number) {
+  position(index: number): XMLPosition {
     if (index >= this.cumulative[this.cumulative.length - 1]) {
       return { line: this.cumulative.length - 1, column: 0 };
     }
@@ -35,36 +28,6 @@ export class XMLLocator {
       return { line: 0, column: 0 };
     }
     return { line: line, column: index - this.cumulative[line] };
-  }
-
-  /**
-   * Naive implementation to use as a reference.
-   *
-   * Performance is O(N), where N is the number of characters in the source.
-   */
-  getPositionSlow(index: number): XMLPosition {
-    const source = this.source;
-    var line = 0;
-    var col = 0;
-    for (var i = 0; i < index; i++) {
-      if (i == source.length) {
-        return {
-          line: line + 1,
-          column: 0
-        };
-      }
-      var ch = source[i];
-      if (ch == '\n') {
-        line += 1;
-        col = 0;
-      } else {
-        col += 1;
-      }
-    }
-    return {
-      line: line,
-      column: col
-    };
   }
 }
 
