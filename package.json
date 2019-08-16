@@ -16,7 +16,7 @@
   "dependencies": {},
   "devDependencies": {
     "@types/jasmine": "^3.4.0",
-    "@types/sax": "^1.2.0",
+    "@types/node": "^12.7.2",
     "@types/xmldom": "^0.1.29",
     "benchmark": "^2.1.4",
     "fast-xml-parser": "^3.12.19",

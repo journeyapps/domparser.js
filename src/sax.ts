@@ -1,7 +1,6 @@
 // TypeScript port of https://github.com/isaacs/sax-js
 
 let sax = {} as {
-  parser(strict: boolean, opt: any): SAXParser;
   SAXParser: typeof SAXParser;
   SAXStream: typeof SAXStream;
   createStream: any;
@@ -11,9 +10,9 @@ let sax = {} as {
   STATE: { [key: string]: number };
 };
 
-sax.parser = function(strict, opt) {
+export function parser(strict?: boolean, opt?: ParserOptions) {
   return new SAXParser(strict, opt);
-};
+}
 
 sax.createStream = createStream;
 
@@ -98,7 +97,7 @@ interface SAXEventArgs {
   ondoctype: void;
   oncomment: string;
   onopentagstart: void;
-  onattribute: void;
+  onattribute: Attribute;
   onopentag: QualifiedTag;
   onclosetag: QualifiedTag;
   onopencdata: void;
@@ -174,7 +173,7 @@ class SAXParser implements SAXEvents {
   ondoctype: () => void;
   oncomment: (comment: string) => void;
   onopentagstart: () => void;
-  onattribute: () => void;
+  onattribute: (attr: Attribute) => void;
   onopentag: (node: QualifiedTag) => void;
   onclosetag: (node: QualifiedTag) => void;
   onopencdata: () => void;
@@ -185,7 +184,7 @@ class SAXParser implements SAXEvents {
   onopennamespace: () => void;
   onclosenamespace: () => void;
 
-  constructor(strict: boolean, opt: ParserOptions) {
+  constructor(strict?: boolean, opt?: ParserOptions) {
     this.reset(strict, opt);
   }
 
@@ -334,7 +333,7 @@ class SAXStream extends Stream {
   readable: boolean;
   _decoder: any;
 
-  constructor(strict: boolean, opt: any) {
+  constructor(strict: boolean, opt?: ParserOptions) {
     super();
 
     this._parser = new SAXParser(strict, opt);
@@ -1770,7 +1769,6 @@ if (!String.fromCodePoint) {
 sax.SAXParser = SAXParser;
 sax.SAXStream = SAXStream;
 
-const parser = sax.parser;
 const EVENTS = sax.EVENTS;
 const ENTITIES = sax.ENTITIES;
 
@@ -1782,7 +1780,6 @@ export {
   SAXParser,
   SAXStream,
   QualifiedTag,
-  parser,
   EVENTS,
   createStream,
   ENTITIES,
