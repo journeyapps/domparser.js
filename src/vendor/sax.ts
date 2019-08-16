@@ -1,11 +1,21 @@
-let sax = {};
+// TypeScript port of https://github.com/isaacs/sax-js
 
-// wrapper for non-node envs
+let sax = {} as {
+  parser(strict: boolean, opt: any): SAXParser;
+  SAXParser: typeof SAXParser;
+  SAXStream: typeof SAXStream;
+  createStream: any;
+  MAX_BUFFER_LENGTH: number;
+  EVENTS: string[];
+  ENTITIES: { [key: string]: string };
+  XML_ENTITIES: { [key: string]: string };
+  STATE: { [key: string]: number };
+};
+
 sax.parser = function(strict, opt) {
   return new SAXParser(strict, opt);
 };
-sax.SAXParser = SAXParser;
-sax.SAXStream = SAXStream;
+
 sax.createStream = createStream;
 
 // When we pass the MAX_BUFFER_LENGTH position, start checking for buffer overruns.
@@ -19,7 +29,7 @@ sax.createStream = createStream;
 // Set to Infinity to have unlimited buffers.
 sax.MAX_BUFFER_LENGTH = 64 * 1024;
 
-var buffers = [
+const buffers = [
   'comment',
   'sgmlDecl',
   'textNode',
@@ -55,43 +65,160 @@ sax.EVENTS = [
   'closenamespace'
 ];
 
-function SAXParser(strict, opt) {
-  if (!(this instanceof SAXParser)) {
-    return new SAXParser(strict, opt);
+interface QualifiedTag {
+  name: string;
+  ns?: { [key: string]: string };
+  attributes?: any;
+  prefix?: string;
+  local?: string;
+  uri?: string;
+  isSelfClosing?: boolean;
+}
+
+interface ProcessingInstruction {
+  name: string;
+  body: string;
+}
+
+interface SAXEventArgs {
+  onerror: Error;
+  onend: void;
+  ontext: string;
+  onprocessinginstruction: ProcessingInstruction;
+  onsgmldeclaration: void;
+  ondoctype: void;
+  oncomment: string;
+  onopentagstart: void;
+  onattribute: void;
+  onopentag: QualifiedTag;
+  onclosetag: QualifiedTag;
+  onopencdata: void;
+  oncdata: string;
+  onclosecdata: void;
+  onready: void;
+  onscript: void;
+  onopennamespace: void;
+  onclosenamespace: void;
+}
+
+type SAXEvents = {
+  [k in keyof SAXEventArgs]: SAXEventArgs[k] extends void
+    ? () => void
+    : (arg: SAXEventArgs[k]) => void;
+};
+
+class SAXParser implements SAXEvents {
+  q: string;
+  c: string;
+  bufferCheckPosition: number;
+  opt: any;
+  looseCase: string;
+  tags: QualifiedTag[];
+  closed: boolean;
+  tag: QualifiedTag;
+  strict: boolean;
+  noscript: boolean;
+  state: number;
+  strictEntities: boolean;
+  ENTITIES: typeof BASE_ENTITIES;
+  attribList: string[];
+  error: Error;
+  closedRoot: boolean;
+  sawRoot: boolean;
+  trackPosition: boolean;
+  position: number;
+  ns: { [key: string]: string };
+  line: number;
+  column: number;
+  sgmlDecl: string;
+  tagName: string;
+  startTagPosition: number;
+  textNode: string;
+  procInstName: string;
+  procInstBody: string;
+  cdata: string;
+  comment: string;
+  doctype: boolean | string;
+  attribName: string;
+  attribValue: string;
+  startAttributePosition: number;
+  script: string;
+  entity: string;
+
+  onerror: (e: Error) => void;
+  onend: () => void;
+  ontext: (text: string) => void;
+  onprocessinginstruction: (instruction: ProcessingInstruction) => void;
+  onsgmldeclaration: () => void;
+  ondoctype: () => void;
+  oncomment: (comment: string) => void;
+  onopentagstart: () => void;
+  onattribute: () => void;
+  onopentag: (node: QualifiedTag) => void;
+  onclosetag: (node: QualifiedTag) => void;
+  onopencdata: () => void;
+  oncdata: (data: string) => void;
+  onclosecdata: () => void;
+  onready: () => void;
+  onscript: () => void;
+  onopennamespace: () => void;
+  onclosenamespace: () => void;
+
+  constructor(strict: boolean, opt: any) {
+    this.reset(strict, opt);
   }
 
-  var parser = this;
-  clearBuffers(parser);
-  parser.q = parser.c = '';
-  parser.bufferCheckPosition = sax.MAX_BUFFER_LENGTH;
-  parser.opt = opt || {};
-  parser.opt.lowercase = parser.opt.lowercase || parser.opt.lowercasetags;
-  parser.looseCase = parser.opt.lowercase ? 'toLowerCase' : 'toUpperCase';
-  parser.tags = [];
-  parser.closed = parser.closedRoot = parser.sawRoot = false;
-  parser.tag = parser.error = null;
-  parser.strict = !!strict;
-  parser.noscript = !!(strict || parser.opt.noscript);
-  parser.state = S.BEGIN;
-  parser.strictEntities = parser.opt.strictEntities;
-  parser.ENTITIES = parser.strictEntities
-    ? Object.create(sax.XML_ENTITIES)
-    : Object.create(sax.ENTITIES);
-  parser.attribList = [];
+  reset(strict: boolean, opt: any) {
+    var parser = this;
+    clearBuffers(parser);
+    parser.q = parser.c = '';
+    parser.bufferCheckPosition = sax.MAX_BUFFER_LENGTH;
+    parser.opt = opt || {};
+    parser.opt.lowercase = parser.opt.lowercase || parser.opt.lowercasetags;
+    parser.looseCase = parser.opt.lowercase ? 'toLowerCase' : 'toUpperCase';
+    parser.tags = [];
+    parser.closed = parser.closedRoot = parser.sawRoot = false;
+    parser.tag = parser.error = null;
+    parser.strict = !!strict;
+    parser.noscript = !!(strict || parser.opt.noscript);
+    parser.state = S.BEGIN;
+    parser.strictEntities = parser.opt.strictEntities;
+    parser.ENTITIES = parser.strictEntities
+      ? Object.create(sax.XML_ENTITIES)
+      : Object.create(sax.ENTITIES);
+    parser.attribList = [];
 
-  // namespaces form a prototype chain.
-  // it always points at the current tag,
-  // which protos to its parent tag.
-  if (parser.opt.xmlns) {
-    parser.ns = Object.create(rootNS);
+    // namespaces form a prototype chain.
+    // it always points at the current tag,
+    // which protos to its parent tag.
+    if (parser.opt.xmlns) {
+      parser.ns = Object.create(rootNS);
+    }
+
+    // mostly just for error reporting
+    parser.trackPosition = parser.opt.position !== false;
+    if (parser.trackPosition) {
+      parser.position = parser.line = parser.column = 0;
+    }
+    emit(parser, 'onready');
   }
 
-  // mostly just for error reporting
-  parser.trackPosition = parser.opt.position !== false;
-  if (parser.trackPosition) {
-    parser.position = parser.line = parser.column = 0;
+  end() {
+    end(this);
   }
-  emit(parser, 'onready');
+
+  write = write;
+  resume() {
+    this.error = null;
+    return this;
+  }
+  close() {
+    return this.write(null);
+  }
+
+  flush() {
+    flushBuffers(this);
+  }
 }
 
 if (!Object.create) {
@@ -165,23 +292,6 @@ function flushBuffers(parser) {
   }
 }
 
-SAXParser.prototype = {
-  end: function() {
-    end(this);
-  },
-  write: write,
-  resume: function() {
-    this.error = null;
-    return this;
-  },
-  close: function() {
-    return this.write(null);
-  },
-  flush: function() {
-    flushBuffers(this);
-  }
-};
-
 var Stream;
 try {
   Stream = require('stream').Stream;
@@ -197,105 +307,104 @@ function createStream(strict, opt) {
   return new SAXStream(strict, opt);
 }
 
-function SAXStream(strict, opt) {
-  if (!(this instanceof SAXStream)) {
-    return new SAXStream(strict, opt);
-  }
+class SAXStream extends Stream {
+  _parser: SAXParser;
+  writable: boolean;
+  readable: boolean;
+  _decoder: any;
 
-  Stream.apply(this);
+  constructor(strict: boolean, opt: any) {
+    super();
 
-  this._parser = new SAXParser(strict, opt);
-  this.writable = true;
-  this.readable = true;
+    this._parser = new SAXParser(strict, opt);
+    this.writable = true;
+    this.readable = true;
 
-  var me = this;
+    var me = this;
 
-  this._parser.onend = function() {
-    me.emit('end');
-  };
-
-  this._parser.onerror = function(er) {
-    me.emit('error', er);
-
-    // if didn't throw, then means error was handled.
-    // go ahead and clear error, so we can write again.
-    me._parser.error = null;
-  };
-
-  this._decoder = null;
-
-  streamWraps.forEach(function(ev) {
-    Object.defineProperty(me, 'on' + ev, {
-      get: function() {
-        return me._parser['on' + ev];
-      },
-      set: function(h) {
-        if (!h) {
-          me.removeAllListeners(ev);
-          me._parser['on' + ev] = h;
-          return h;
-        }
-        me.on(ev, h);
-      },
-      enumerable: true,
-      configurable: false
-    });
-  });
-}
-
-SAXStream.prototype = Object.create(Stream.prototype, {
-  constructor: {
-    value: SAXStream
-  }
-});
-
-SAXStream.prototype.write = function(data) {
-  if (
-    typeof Buffer === 'function' &&
-    typeof Buffer.isBuffer === 'function' &&
-    Buffer.isBuffer(data)
-  ) {
-    if (!this._decoder) {
-      var SD = require('string_decoder').StringDecoder;
-      this._decoder = new SD('utf8');
-    }
-    data = this._decoder.write(data);
-  }
-
-  this._parser.write(data.toString());
-  this.emit('data', data);
-  return true;
-};
-
-SAXStream.prototype.end = function(chunk) {
-  if (chunk && chunk.length) {
-    this.write(chunk);
-  }
-  this._parser.end();
-  return true;
-};
-
-SAXStream.prototype.on = function(ev, handler) {
-  var me = this;
-  if (!me._parser['on' + ev] && streamWraps.indexOf(ev) !== -1) {
-    me._parser['on' + ev] = function() {
-      var args =
-        arguments.length === 1 ? [arguments[0]] : Array.apply(null, arguments);
-      args.splice(0, 0, ev);
-      me.emit.apply(me, args);
+    this._parser.onend = function() {
+      me.emit('end');
     };
+
+    this._parser.onerror = function(er) {
+      me.emit('error', er);
+
+      // if didn't throw, then means error was handled.
+      // go ahead and clear error, so we can write again.
+      me._parser.error = null;
+    };
+
+    this._decoder = null;
+
+    streamWraps.forEach(function(ev) {
+      Object.defineProperty(me, 'on' + ev, {
+        get: function() {
+          return me._parser['on' + ev];
+        },
+        set: function(h) {
+          if (!h) {
+            me.removeAllListeners(ev);
+            me._parser['on' + ev] = h;
+            return h;
+          }
+          me.on(ev, h);
+        },
+        enumerable: true,
+        configurable: false
+      });
+    });
   }
 
-  return Stream.prototype.on.call(me, ev, handler);
-};
+  write(data) {
+    if (
+      typeof Buffer === 'function' &&
+      typeof Buffer.isBuffer === 'function' &&
+      Buffer.isBuffer(data)
+    ) {
+      if (!this._decoder) {
+        var SD = require('string_decoder').StringDecoder;
+        this._decoder = new SD('utf8');
+      }
+      data = this._decoder.write(data);
+    }
+
+    this._parser.write(data.toString());
+    this.emit('data', data);
+    return true;
+  }
+
+  end(chunk) {
+    if (chunk && chunk.length) {
+      this.write(chunk);
+    }
+    this._parser.end();
+    return true;
+  }
+
+  on(ev, handler) {
+    var me = this;
+    if (!me._parser['on' + ev] && streamWraps.indexOf(ev) !== -1) {
+      me._parser['on' + ev] = function() {
+        var args =
+          arguments.length === 1
+            ? [arguments[0]]
+            : Array.apply(null, arguments);
+        args.splice(0, 0, ev);
+        me.emit.apply(me, args);
+      };
+    }
+
+    return Stream.prototype.on.call(me, ev, handler);
+  }
+}
 
 // this really needs to be replaced with character classes.
 // XML allows all manner of ridiculous numbers and digits.
-var CDATA = '[CDATA[';
-var DOCTYPE = 'DOCTYPE';
-var XML_NAMESPACE = 'http://www.w3.org/XML/1998/namespace';
-var XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/';
-var rootNS = { xml: XML_NAMESPACE, xmlns: XMLNS_NAMESPACE };
+const CDATA = '[CDATA[';
+const DOCTYPE = 'DOCTYPE';
+const XML_NAMESPACE = 'http://www.w3.org/XML/1998/namespace';
+const XMLNS_NAMESPACE = 'http://www.w3.org/2000/xmlns/';
+const rootNS = { xml: XML_NAMESPACE, xmlns: XMLNS_NAMESPACE };
 
 // http://www.w3.org/TR/REC-xml/#NT-NameStartChar
 // This implementation works on strings, a single character at a time
@@ -303,12 +412,12 @@ var rootNS = { xml: XML_NAMESPACE, xmlns: XMLNS_NAMESPACE };
 // without a significant breaking change to either this  parser, or the
 // JavaScript language.  Implementation of an emoji-capable xml parser
 // is left as an exercise for the reader.
-var nameStart = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/;
+const nameStart = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/;
 
-var nameBody = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/;
+const nameBody = /[:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/;
 
-var entityStart = /[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/;
-var entityBody = /[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/;
+const entityStart = /[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]/;
+const entityBody = /[#:_A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u00B7\u0300-\u036F\u203F-\u2040.\d-]/;
 
 function isWhitespace(c) {
   return c === ' ' || c === '\n' || c === '\r' || c === '\t';
@@ -330,44 +439,44 @@ function notMatch(regex, c) {
   return !isMatch(regex, c);
 }
 
-var S = 0;
+var p = 0;
 sax.STATE = {
-  BEGIN: S++, // leading byte order mark or whitespace
-  BEGIN_WHITESPACE: S++, // leading whitespace
-  TEXT: S++, // general stuff
-  TEXT_ENTITY: S++, // &amp and such.
-  OPEN_WAKA: S++, // <
-  SGML_DECL: S++, // <!BLARG
-  SGML_DECL_QUOTED: S++, // <!BLARG foo "bar
-  DOCTYPE: S++, // <!DOCTYPE
-  DOCTYPE_QUOTED: S++, // <!DOCTYPE "//blah
-  DOCTYPE_DTD: S++, // <!DOCTYPE "//blah" [ ...
-  DOCTYPE_DTD_QUOTED: S++, // <!DOCTYPE "//blah" [ "foo
-  COMMENT_STARTING: S++, // <!-
-  COMMENT: S++, // <!--
-  COMMENT_ENDING: S++, // <!-- blah -
-  COMMENT_ENDED: S++, // <!-- blah --
-  CDATA: S++, // <![CDATA[ something
-  CDATA_ENDING: S++, // ]
-  CDATA_ENDING_2: S++, // ]]
-  PROC_INST: S++, // <?hi
-  PROC_INST_BODY: S++, // <?hi there
-  PROC_INST_ENDING: S++, // <?hi "there" ?
-  OPEN_TAG: S++, // <strong
-  OPEN_TAG_SLASH: S++, // <strong /
-  ATTRIB: S++, // <a
-  ATTRIB_NAME: S++, // <a foo
-  ATTRIB_NAME_SAW_WHITE: S++, // <a foo _
-  ATTRIB_VALUE: S++, // <a foo=
-  ATTRIB_VALUE_QUOTED: S++, // <a foo="bar
-  ATTRIB_VALUE_CLOSED: S++, // <a foo="bar"
-  ATTRIB_VALUE_UNQUOTED: S++, // <a foo=bar
-  ATTRIB_VALUE_ENTITY_Q: S++, // <foo bar="&quot;"
-  ATTRIB_VALUE_ENTITY_U: S++, // <foo bar=&quot
-  CLOSE_TAG: S++, // </a
-  CLOSE_TAG_SAW_WHITE: S++, // </a   >
-  SCRIPT: S++, // <script> ...
-  SCRIPT_ENDING: S++ // <script> ... <
+  BEGIN: p++, // leading byte order mark or whitespace
+  BEGIN_WHITESPACE: p++, // leading whitespace
+  TEXT: p++, // general stuff
+  TEXT_ENTITY: p++, // &amp and such.
+  OPEN_WAKA: p++, // <
+  SGML_DECL: p++, // <!BLARG
+  SGML_DECL_QUOTED: p++, // <!BLARG foo "bar
+  DOCTYPE: p++, // <!DOCTYPE
+  DOCTYPE_QUOTED: p++, // <!DOCTYPE "//blah
+  DOCTYPE_DTD: p++, // <!DOCTYPE "//blah" [ ...
+  DOCTYPE_DTD_QUOTED: p++, // <!DOCTYPE "//blah" [ "foo
+  COMMENT_STARTING: p++, // <!-
+  COMMENT: p++, // <!--
+  COMMENT_ENDING: p++, // <!-- blah -
+  COMMENT_ENDED: p++, // <!-- blah --
+  CDATA: p++, // <![CDATA[ something
+  CDATA_ENDING: p++, // ]
+  CDATA_ENDING_2: p++, // ]]
+  PROC_INST: p++, // <?hi
+  PROC_INST_BODY: p++, // <?hi there
+  PROC_INST_ENDING: p++, // <?hi "there" ?
+  OPEN_TAG: p++, // <strong
+  OPEN_TAG_SLASH: p++, // <strong /
+  ATTRIB: p++, // <a
+  ATTRIB_NAME: p++, // <a foo
+  ATTRIB_NAME_SAW_WHITE: p++, // <a foo _
+  ATTRIB_VALUE: p++, // <a foo=
+  ATTRIB_VALUE_QUOTED: p++, // <a foo="bar
+  ATTRIB_VALUE_CLOSED: p++, // <a foo="bar"
+  ATTRIB_VALUE_UNQUOTED: p++, // <a foo=bar
+  ATTRIB_VALUE_ENTITY_Q: p++, // <foo bar="&quot;"
+  ATTRIB_VALUE_ENTITY_U: p++, // <foo bar=&quot
+  CLOSE_TAG: p++, // </a
+  CLOSE_TAG_SAW_WHITE: p++, // </a   >
+  SCRIPT: p++, // <script> ...
+  SCRIPT_ENDING: p++ // <script> ... <
 };
 
 sax.XML_ENTITIES = {
@@ -378,7 +487,7 @@ sax.XML_ENTITIES = {
   apos: "'"
 };
 
-sax.ENTITIES = {
+const BASE_ENTITIES = {
   amp: '&',
   gt: '>',
   lt: '<',
@@ -634,41 +743,43 @@ sax.ENTITIES = {
   diams: 9830
 };
 
-Object.keys(sax.ENTITIES).forEach(function(key) {
-  var e = sax.ENTITIES[key];
+sax.ENTITIES = {};
+
+Object.keys(BASE_ENTITIES).forEach(function(key) {
+  var e = BASE_ENTITIES[key];
   var s = typeof e === 'number' ? String.fromCharCode(e) : e;
   sax.ENTITIES[key] = s;
 });
 
-for (var s in sax.STATE) {
-  sax.STATE[sax.STATE[s]] = s;
-}
-
 // shorthand
-S = sax.STATE;
+const S = sax.STATE;
 
-function emit(parser, event, data) {
-  parser[event] && parser[event](data);
+function emit<T extends keyof SAXEvents>(
+  parser: SAXParser,
+  event: T,
+  data?: SAXEventArgs[T]
+) {
+  parser[event] && (parser[event] as any)(data);
 }
 
-function emitNode(parser, nodeType, data) {
+function emitNode(parser: SAXParser, nodeType: keyof SAXEvents, data?: any) {
   if (parser.textNode) closeText(parser);
   emit(parser, nodeType, data);
 }
 
-function closeText(parser) {
+function closeText(parser: SAXParser) {
   parser.textNode = textopts(parser.opt, parser.textNode);
   if (parser.textNode) emit(parser, 'ontext', parser.textNode);
   parser.textNode = '';
 }
 
-function textopts(opt, text) {
+function textopts(opt: any, text: string) {
   if (opt.trim) text = text.trim();
   if (opt.normalize) text = text.replace(/\s+/g, ' ');
   return text;
 }
 
-function error(parser, er) {
+function error(parser: SAXParser, er: string) {
   closeText(parser);
   if (parser.trackPosition) {
     er +=
@@ -679,13 +790,13 @@ function error(parser, er) {
       '\nChar: ' +
       parser.c;
   }
-  er = new Error(er);
-  parser.error = er;
-  emit(parser, 'onerror', er);
+  const error = new Error(er);
+  parser.error = error;
+  emit(parser, 'onerror', error);
   return parser;
 }
 
-function end(parser) {
+function end(parser: SAXParser) {
   if (parser.sawRoot && !parser.closedRoot)
     strictFail(parser, 'Unclosed root tag');
   if (
@@ -699,11 +810,11 @@ function end(parser) {
   parser.c = '';
   parser.closed = true;
   emit(parser, 'onend');
-  SAXParser.call(parser, parser.strict, parser.opt);
+  parser.reset(parser.strict, parser.opt);
   return parser;
 }
 
-function strictFail(parser, message) {
+function strictFail(parser: SAXParser, message: string) {
   if (typeof parser !== 'object' || !(parser instanceof SAXParser)) {
     throw new Error('bad call to strictFail');
   }
@@ -712,10 +823,14 @@ function strictFail(parser, message) {
   }
 }
 
-function newTag(parser) {
+function newTag(parser: SAXParser) {
   if (!parser.strict) parser.tagName = parser.tagName[parser.looseCase]();
   var parent = parser.tags[parser.tags.length - 1] || parser;
-  var tag = (parser.tag = { name: parser.tagName, attributes: {} });
+  var tag: QualifiedTag = (parser.tag = {
+    name: parser.tagName,
+    attributes: {},
+    ns: null
+  });
 
   // will be overridden if tag contails an xmlns="foo" or xmlns:foo="bar"
   if (parser.opt.xmlns) {
@@ -725,7 +840,7 @@ function newTag(parser) {
   emitNode(parser, 'onopentagstart', tag);
 }
 
-function qname(name, attribute) {
+function qname(name: string, attribute?: any) {
   var i = name.indexOf(':');
   var qualName = i < 0 ? ['', name] : name.split(':');
   var prefix = qualName[0];
@@ -809,7 +924,7 @@ function attrib(parser) {
   parser.attribName = parser.attribValue = '';
 }
 
-function openTag(parser, selfClosing) {
+function openTag(parser: SAXParser, selfClosing?: boolean) {
   if (parser.opt.xmlns) {
     // emit namespace binding events
     var tag = parser.tag;
@@ -896,7 +1011,7 @@ function openTag(parser, selfClosing) {
   parser.attribList.length = 0;
 }
 
-function closeTag(parser) {
+function closeTag(parser: SAXParser) {
   if (!parser.tagName) {
     strictFail(parser, 'Weird empty close tag.');
     parser.textNode += '</>';
@@ -1000,7 +1115,7 @@ function parseEntity(parser) {
   return String.fromCodePoint(num);
 }
 
-function beginWhiteSpace(parser, c) {
+function beginWhiteSpace(parser: SAXParser, c: string) {
   if (c === '<') {
     parser.state = S.OPEN_WAKA;
     parser.startTagPosition = parser.position;
@@ -1013,7 +1128,7 @@ function beginWhiteSpace(parser, c) {
   }
 }
 
-function charAt(chunk, i) {
+function charAt(chunk: string, i: number) {
   var result = '';
   if (i < chunk.length) {
     result = chunk.charAt(i);
@@ -1021,7 +1136,7 @@ function charAt(chunk, i) {
   return result;
 }
 
-function write(chunk) {
+function write(this: SAXParser, chunk: string | any) {
   var parser = this;
   if (this.error) {
     throw this.error;
@@ -1323,7 +1438,7 @@ function write(chunk) {
           emitNode(parser, 'onprocessinginstruction', {
             name: parser.procInstName,
             body: parser.procInstBody
-          });
+          } as ProcessingInstruction);
           parser.procInstName = parser.procInstBody = '';
           parser.state = S.TEXT;
         } else {
@@ -1564,7 +1679,7 @@ function write(chunk) {
         continue;
 
       default:
-        throw new Error(parser, 'Unknown state: ' + parser.state);
+        throw new Error('Unknown state: ' + parser.state);
     }
   } // while
 
@@ -1632,4 +1747,9 @@ if (!String.fromCodePoint) {
   })();
 }
 
-module.exports = sax;
+sax.SAXParser = SAXParser;
+sax.SAXStream = SAXStream;
+
+const parser = sax.parser;
+
+export { SAXParser, SAXStream, QualifiedTag, parser };

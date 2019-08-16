@@ -134,14 +134,14 @@ describe('DOMParser', function() {
 
     it('should report an unclosed comment', function() {
       var errors = errorsFor('<xml><!--</xml>');
-      expect(errors.length).toBe(1);
-      expect(errors[0]).toEqual(
+      // expect(errors.length).toBe(1);
+      expect(errors).toEqual([
         new XMLError({
           message: 'Unexpected end',
           line: 0,
           column: 15
         })
-      );
+      ]);
     });
 
     it('should report an unquoted attribute tag', function() {
