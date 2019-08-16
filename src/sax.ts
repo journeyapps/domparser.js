@@ -5,7 +5,6 @@ let sax = {} as {
   SAXParser: typeof SAXParser;
   SAXStream: typeof SAXStream;
   createStream: any;
-  MAX_BUFFER_LENGTH: number;
   EVENTS: string[];
   ENTITIES: { [key: string]: string };
   XML_ENTITIES: { [key: string]: string };
@@ -27,7 +26,7 @@ sax.createStream = createStream;
 // the caller, so it is assumed to be safe.  Thus, a call to write() may, in the extreme
 // edge case, result in creating at most one complete copy of the string passed in.
 // Set to Infinity to have unlimited buffers.
-sax.MAX_BUFFER_LENGTH = 64 * 1024;
+let MAX_BUFFER_LENGTH = 64 * 1024;
 
 const buffers = [
   'comment',
@@ -68,11 +67,21 @@ sax.EVENTS = [
 interface QualifiedTag {
   name: string;
   ns?: { [key: string]: string };
-  attributes?: any;
+  attributes?: { [key: string]: Attribute } | { [key: string]: string };
   prefix?: string;
   local?: string;
   uri?: string;
   isSelfClosing?: boolean;
+}
+
+export interface Attribute {
+  name: string;
+  value: string;
+  prefix?: string;
+  local?: string;
+  uri?: string;
+  start?: number;
+  end?: number;
 }
 
 interface ProcessingInstruction {
@@ -107,11 +116,23 @@ type SAXEvents = {
     : (arg: SAXEventArgs[k]) => void;
 };
 
+export interface ParserOptions {
+  lowercase?: boolean;
+  lowercasetags?: boolean;
+  noscript?: boolean;
+  strictEntities?: boolean;
+  position?: boolean;
+  xmlns?: boolean;
+  attributePosition?: boolean;
+}
+
+type AttribInternal = [string, string, number, number];
+
 class SAXParser implements SAXEvents {
   q: string;
   c: string;
   bufferCheckPosition: number;
-  opt: any;
+  opt: ParserOptions;
   looseCase: string;
   tags: QualifiedTag[];
   closed: boolean;
@@ -121,7 +142,7 @@ class SAXParser implements SAXEvents {
   state: number;
   strictEntities: boolean;
   ENTITIES: typeof BASE_ENTITIES;
-  attribList: string[];
+  attribList: AttribInternal[];
   error: Error;
   closedRoot: boolean;
   sawRoot: boolean;
@@ -164,15 +185,15 @@ class SAXParser implements SAXEvents {
   onopennamespace: () => void;
   onclosenamespace: () => void;
 
-  constructor(strict: boolean, opt: any) {
+  constructor(strict: boolean, opt: ParserOptions) {
     this.reset(strict, opt);
   }
 
-  reset(strict: boolean, opt: any) {
+  reset(strict: boolean, opt: ParserOptions) {
     var parser = this;
     clearBuffers(parser);
     parser.q = parser.c = '';
-    parser.bufferCheckPosition = sax.MAX_BUFFER_LENGTH;
+    parser.bufferCheckPosition = MAX_BUFFER_LENGTH;
     parser.opt = opt || {};
     parser.opt.lowercase = parser.opt.lowercase || parser.opt.lowercasetags;
     parser.looseCase = parser.opt.lowercase ? 'toLowerCase' : 'toUpperCase';
@@ -239,7 +260,7 @@ if (!Object.keys) {
 }
 
 function checkBufferLength(parser) {
-  var maxAllowed = Math.max(sax.MAX_BUFFER_LENGTH, 10);
+  var maxAllowed = Math.max(MAX_BUFFER_LENGTH, 10);
   var maxActual = 0;
   for (var i = 0, l = buffers.length; i < l; i++) {
     var len = parser[buffers[i]].length;
@@ -270,7 +291,7 @@ function checkBufferLength(parser) {
     maxActual = Math.max(maxActual, len);
   }
   // schedule the next check for the earliest possible buffer overrun.
-  var m = sax.MAX_BUFFER_LENGTH - maxActual;
+  var m = MAX_BUFFER_LENGTH - maxActual;
   parser.bufferCheckPosition = m + parser.position;
 }
 
@@ -828,8 +849,7 @@ function newTag(parser: SAXParser) {
   var parent = parser.tags[parser.tags.length - 1] || parser;
   var tag: QualifiedTag = (parser.tag = {
     name: parser.tagName,
-    attributes: {},
-    ns: null
+    attributes: {}
   });
 
   // will be overridden if tag contails an xmlns="foo" or xmlns:foo="bar"
@@ -855,15 +875,12 @@ function qname(name: string, attribute?: any) {
   return { prefix: prefix, local: local };
 }
 
-function attrib(parser) {
+function attrib(parser: SAXParser) {
   if (!parser.strict) {
     parser.attribName = parser.attribName[parser.looseCase]();
   }
 
-  if (
-    parser.attribList.indexOf(parser.attribName) !== -1 ||
-    parser.tag.attributes.hasOwnProperty(parser.attribName)
-  ) {
+  if (parser.tag.attributes.hasOwnProperty(parser.attribName)) {
     parser.attribName = parser.attribValue = '';
     return;
   }
@@ -966,15 +983,18 @@ function openTag(parser: SAXParser, selfClosing?: boolean) {
       var prefix = qualName.prefix;
       var local = qualName.local;
       var uri = prefix === '' ? '' : tag.ns[prefix] || '';
-      var a = {
+      var a: Attribute = {
         name: name,
         value: value,
         prefix: prefix,
         local: local,
-        uri: uri,
-        start: start,
-        end: end
+        uri: uri
       };
+
+      if (parser.opt.attributePosition) {
+        a.start = start;
+        a.end = end;
+      }
 
       // if there's any attributes with an undefined namespace,
       // then fail on them now.
@@ -1751,5 +1771,21 @@ sax.SAXParser = SAXParser;
 sax.SAXStream = SAXStream;
 
 const parser = sax.parser;
+const EVENTS = sax.EVENTS;
+const ENTITIES = sax.ENTITIES;
 
-export { SAXParser, SAXStream, QualifiedTag, parser };
+function setBufferLength(length: number) {
+  MAX_BUFFER_LENGTH = length;
+}
+
+export {
+  SAXParser,
+  SAXStream,
+  QualifiedTag,
+  parser,
+  EVENTS,
+  createStream,
+  ENTITIES,
+  MAX_BUFFER_LENGTH,
+  setBufferLength
+};

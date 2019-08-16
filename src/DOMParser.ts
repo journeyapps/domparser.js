@@ -1,6 +1,6 @@
 import { XMLError, errorFromParser } from './XMLError';
 
-import * as sax from './vendor/sax';
+import * as sax from './sax';
 import * as native from './xmldom';
 import { XMLElement } from './XMLElement';
 import { XMLDocument } from './XMLDocument';
@@ -43,7 +43,7 @@ export class DOMParser implements globalThis.DOMParser {
   parseFromString(source: string): XMLDocument {
     const locator = new XMLLocator(source);
 
-    const parser = sax.parser(true, { xmlns: true });
+    const parser = sax.parser(true, { xmlns: true, attributePosition: true });
     let errors: XMLError[] = [];
     let doc = this.options.implementation.createDocument(
       null,
@@ -107,7 +107,7 @@ export class DOMParser implements globalThis.DOMParser {
 
       // We have: parser.line, parser.column, parser.position, parser.startTagPosition
       for (var key in node.attributes) {
-        var attr = node.attributes[key];
+        var attr = node.attributes[key] as sax.Attribute;
         // Attribute nodes seem to be deprecated in general.
         // doc.createAttributeNS does not work for some cases in PhantomJS, e.g.
         //   `xmlns="http://www.w3.org/2001/XMLSchema"`:

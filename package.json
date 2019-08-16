@@ -8,13 +8,12 @@
     "build": "tsc",
     "test": "ts-node node_modules/jasmine/bin/jasmine test/*_spec.ts",
     "test:browsers": "karma start --single-run",
+    "text:sax": "tap sax-test/*.js",
     "pretty": "prettier --write '**/*.{ts,js}'",
     "lint": "prettier --check '**/*.{ts,js}'",
     "benchmark": "node benchmark/benchmark.js"
   },
-  "dependencies": {
-    "sax": "^1.2.4"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/jasmine": "^3.4.0",
     "@types/sax": "^1.2.0",
@@ -29,6 +28,7 @@
     "karma-spec-reporter": "^0.0.32",
     "karma-typescript": "^4.1.1",
     "prettier": "^1.18.2",
+    "tap": "^14.6.1",
     "ts-node": "^8.3.0",
     "typescript": "^3.5.3",
     "xmldom": "^0.1.27"
