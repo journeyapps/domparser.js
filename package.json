@@ -8,7 +8,7 @@
     "build": "tsc",
     "test": "ts-node node_modules/jasmine/bin/jasmine test/*_spec.ts",
     "test:browsers": "karma start --single-run",
-    "text:sax": "tap sax-test/*.js",
+    "test:sax": "tap sax-test/*.js",
     "pretty": "prettier --write '**/*.{ts,js}'",
     "lint": "prettier --check '**/*.{ts,js}'",
     "benchmark": "node benchmark/benchmark.js"

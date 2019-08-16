@@ -1536,7 +1536,9 @@ function write(this: SAXParser, chunk: string | any) {
           continue;
         } else {
           strictFail(parser, 'Attribute without value');
-          parser.tag.attributes[parser.attribName] = '';
+          parser.tag.attributes[parser.attribName] = parser.opt.xmlns
+            ? { name: parser.attribName, value: '' }
+            : '';
           parser.attribValue = '';
           emitNode(parser, 'onattribute', {
             name: parser.attribName,
