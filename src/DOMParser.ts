@@ -6,6 +6,7 @@ import { XMLElement } from './XMLElement';
 import { XMLDocument } from './XMLDocument';
 import { XMLLocator } from './XMLLocator';
 import { XMLAttributePosition } from './XMLAttributePosition';
+import { XMLNode } from './XMLNode';
 
 function getMatch(re: RegExp, pos: number, str: string) {
   var match = re.exec(str);
@@ -40,7 +41,7 @@ export class DOMParser implements globalThis.DOMParser {
     }
   }
 
-  parseFromString(source: string): XMLDocument {
+  parseFromString(source: string, _type?: SupportedType): XMLDocument {
     const locator = new XMLLocator(source);
 
     const parser = sax.parser(true, { xmlns: true, attributePosition: true });
@@ -51,7 +52,7 @@ export class DOMParser implements globalThis.DOMParser {
       null
     ) as XMLDocument;
     doc.locator = locator;
-    let current: Node = doc;
+    let current: XMLNode = doc;
 
     // Events we ignore:
     //   Not present in the documents we're interested in:
