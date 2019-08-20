@@ -1,4 +1,4 @@
-import * as sax from 'sax';
+import * as sax from '../src/sax';
 
 // While this does not test any of our own code, it describes how we expect the SAX parser to behave.
 describe('sax', function() {

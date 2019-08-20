@@ -1,9 +1,12 @@
 import { XMLError, errorFromParser } from './XMLError';
 
-import * as sax from 'sax';
+import * as sax from './sax';
 import * as native from './xmldom';
 import { XMLElement } from './XMLElement';
 import { XMLDocument } from './XMLDocument';
+import { XMLLocator } from './XMLLocator';
+import { XMLAttributePosition } from './XMLAttributePosition';
+import { XMLNode } from './XMLNode';
 
 function getMatch(re: RegExp, pos: number, str: string) {
   var match = re.exec(str);
@@ -15,6 +18,9 @@ function getMatch(re: RegExp, pos: number, str: string) {
 }
 
 function errorFromMessage(message: string) {
+  if (typeof message != 'string') {
+    throw message;
+  }
   var msg = message.split('\n')[0];
   var line = parseInt(getMatch(/Line: (\d+)/, 1, message), 10);
   var column = parseInt(getMatch(/Column: (\d+)/, 1, message), 10);
@@ -35,43 +41,26 @@ export class DOMParser implements globalThis.DOMParser {
     }
   }
 
-  parseFromString(source: string): XMLDocument {
-    function getPosition(index: number) {
-      // Very inefficient, but can be optimized later.
+  parseFromString(source: string, _type?: SupportedType): XMLDocument {
+    const locator = new XMLLocator(source);
 
-      var line = 0;
-      var col = 0;
-      for (var i = 0; i < index; i++) {
-        var ch = source[i];
-        if (ch == '\n') {
-          line += 1;
-          col = 0;
-        } else {
-          col += 1;
-        }
-      }
-      return {
-        line: line,
-        column: col
-      };
-    }
-
-    const parser = sax.parser(true, { xmlns: true });
+    const parser = sax.parser(true, { xmlns: true, attributePosition: true });
     let errors: XMLError[] = [];
     let doc = this.options.implementation.createDocument(
       null,
       null,
       null
     ) as XMLDocument;
-    let current: Node = doc;
+    doc.locator = locator;
+    let current: XMLNode = doc;
 
     // Events we ignore:
     //   Not present in the documents we're interested in:
     //    'sgmldeclaration', 'doctype', 'script'
     //   Already included in the data of other events:
     //    'attribute', 'opencdata', 'closecdata', 'opennamespace', 'closenamespace'
-    //   What does it do?
-    //    'ready'
+    //   We're working with strings, not streams:
+    //    'ready', 'end
 
     function addUnlessDuplicate(error: XMLError) {
       // Heuristics to filter out duplicates.
@@ -111,13 +100,34 @@ export class DOMParser implements globalThis.DOMParser {
 
     parser.onopentag = function(node: sax.QualifiedTag) {
       var element = doc.createElementNS(node.uri, node.name) as XMLElement;
-      element.openStart = getPosition(parser.startTagPosition - 1);
-      element.openEnd = { line: parser.line, column: parser.column };
+      element.openStart = parser.startTagPosition - 1;
+      element.nameStart = element.openStart + 1;
+      element.nameEnd = element.nameStart + node.name.length;
+      element.openEnd = parser.position;
+      element.attributePositions = {};
 
       // We have: parser.line, parser.column, parser.position, parser.startTagPosition
       for (var key in node.attributes) {
-        var attr = node.attributes[key];
-        element.setAttributeNS(attr.uri, attr.name, attr.value);
+        var attr = node.attributes[key] as sax.Attribute;
+        // Attribute nodes seem to be deprecated in general.
+        // doc.createAttributeNS does not work for some cases in PhantomJS, e.g.
+        //   `xmlns="http://www.w3.org/2001/XMLSchema"`:
+        //   {name: 'xmlns', value: 'http://www.w3.org/2001/XMLSchema', prefix: 'xmlns', local: '', uri: 'http://www.w3.org/2000/xmlns/'
+        // Also, it was removed in Chrome 34.
+        // Custom attributes on nodes also disappear sometimes in Chrome.
+        // The solution is to store the attribute positions on the element node.
+        var position: XMLAttributePosition = {
+          start: (attr as any).start - 1,
+          end: (attr as any).end,
+          nameEnd: 0,
+          valueStart: 0
+        };
+        position.nameEnd =
+          position.start + (attr.name == null ? 0 : attr.name.length);
+        position.valueStart = position.nameEnd + 1; // NOT always correct
+        // This does not take the URI into account
+        element.attributePositions[attr.name] = position;
+        element.setAttributeNS(attr.uri, attr.name || '.', attr.value);
       }
       current.appendChild(element);
       current = element;
@@ -125,8 +135,8 @@ export class DOMParser implements globalThis.DOMParser {
 
     parser.onclosetag = function() {
       let currentElement = current as XMLElement;
-      currentElement.closeStart = getPosition(parser.startTagPosition - 1);
-      currentElement.closeEnd = { line: parser.line, column: parser.column };
+      currentElement.closeStart = parser.startTagPosition - 1;
+      currentElement.closeEnd = parser.position;
 
       current = current.parentNode;
     };
@@ -137,10 +147,6 @@ export class DOMParser implements globalThis.DOMParser {
         instruction.body
       );
       doc.appendChild(node);
-    };
-
-    parser.onattribute = function(attr) {
-      // We handle attributes inside onopentag
     };
 
     parser.oncdata = function(cdata) {
