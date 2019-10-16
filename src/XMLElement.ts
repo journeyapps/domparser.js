@@ -4,18 +4,42 @@ import { XMLAttribute } from './XMLAttribute';
 import { XMLNode } from './XMLNode';
 import { IterableNodeList } from './IterableNodeList';
 
-// We cannot extend from both XMLNode and Element (type conflicts), so we & the types instead.
-export type XMLElement = XMLElementInternal & Element;
-
-interface XMLElementInternal extends XMLNode {
+export interface XMLElement extends XMLNode {
   // Specializing the standard properties
   getAttributeNode(name: string): XMLAttribute | null;
   getAttributeNodeNS(
     namespaceURI: string,
     localName: string
   ): XMLAttribute | null;
+  /**
+   * Sets the value of element's first attribute whose qualified name is qualifiedName to value.
+   */
+  setAttribute(qualifiedName: string, value: string): void;
+  /**
+   * Sets the value of element's attribute whose namespace is namespace and local name is localName to value.
+   */
+  setAttributeNS(
+    namespace: string | null,
+    qualifiedName: string,
+    value: string
+  ): void;
+  setAttributeNode(attr: Attr): Attr | null;
+  setAttributeNodeNS(attr: Attr): Attr | null;
+
+  /**
+   * Returns element's first attribute whose qualified name is qualifiedName, and null if there is no such attribute otherwise.
+   */
+  getAttribute(qualifiedName: string): string | null;
+  /**
+   * Returns element's attribute whose namespace is namespace and local name is localName, and null if there is no such attribute otherwise.
+   */
+  getAttributeNS(namespace: string | null, localName: string): string | null;
 
   ownerDocument: XMLDocument;
+
+  readonly localName: string;
+  readonly prefix: string;
+  readonly attributes: NamedNodeMap;
 
   /**
    * Returns the children.
@@ -31,4 +55,16 @@ interface XMLElementInternal extends XMLNode {
   nameStart?: number;
   nameEnd?: number;
   attributePositions?: { [key: string]: XMLAttributePosition };
+}
+
+interface NamedNodeMap<T = XMLAttribute> {
+  readonly length: number;
+  getNamedItem(qualifiedName: string): T | null;
+  getNamedItemNS(namespace: string | null, localName: string): T | null;
+  item(index: number): T | null;
+  removeNamedItem(qualifiedName: string): T;
+  removeNamedItemNS(namespace: string | null, localName: string): T;
+  setNamedItem(attr: T): T | null;
+  setNamedItemNS(attr: T): T | null;
+  [index: number]: T;
 }

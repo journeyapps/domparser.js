@@ -27,30 +27,37 @@ function errorFromMessage(message: string) {
   return new XMLError(msg, { line: line, column: column });
 }
 
+export interface DOMImplementation {
+  createDocument(
+    namespaceURI: string | null,
+    qualifiedName: string | null,
+    type?: any
+  ): XMLDocument;
+}
+
 export interface DOMParserOptions {
   implementation: DOMImplementation;
 }
 
-export class DOMParser implements globalThis.DOMParser {
-  private options: DOMParserOptions;
+export class DOMParser {
+  private options?: DOMParserOptions;
 
   constructor(options?: Partial<DOMParserOptions>) {
     this.options = (options || {}) as DOMParserOptions;
     if (!this.options.implementation) {
-      this.options.implementation = native.implementation;
+      this.options.implementation = (native.implementation as unknown) as DOMImplementation;
     }
   }
 
-  parseFromString(source: string, _type?: SupportedType): XMLDocument {
+  parseFromString(
+    source: string,
+    _type?: 'text/html' | 'text/xml' | 'application/xml'
+  ): XMLDocument {
     const locator = new XMLLocator(source);
 
     const parser = sax.parser(true, { xmlns: true, attributePosition: true });
     let errors: XMLError[] = [];
-    let doc = this.options.implementation.createDocument(
-      null,
-      null,
-      null
-    ) as XMLDocument;
+    let doc = this.options.implementation.createDocument(null, null, null);
     doc.locator = locator;
     let current: XMLNode = doc;
 
