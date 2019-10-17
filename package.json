@@ -7,7 +7,7 @@
   "browser": "lib/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "ts-node node_modules/jasmine/bin/jasmine test/*_spec.ts",
+    "test": "ts-node --project ./tsconfig.test.json node_modules/jasmine/bin/jasmine test/*_spec.ts",
     "test:browsers": "karma start --single-run",
     "test:sax": "tap sax-test/*.js",
     "pretty": "prettier --write '**/*.{ts,js}'",

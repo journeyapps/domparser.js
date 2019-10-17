@@ -23,8 +23,8 @@ export interface XMLElement extends XMLNode {
     qualifiedName: string,
     value: string
   ): void;
-  setAttributeNode(attr: Attr): Attr | null;
-  setAttributeNodeNS(attr: Attr): Attr | null;
+  setAttributeNode(attr: XMLAttribute): XMLAttribute | null;
+  setAttributeNodeNS(attr: XMLAttribute): XMLAttribute | null;
 
   /**
    * Returns element's first attribute whose qualified name is qualifiedName, and null if there is no such attribute otherwise.
@@ -55,7 +55,7 @@ export interface XMLElement extends XMLNode {
    * Removes element's attribute whose namespace is namespace and local name is localName.
    */
   removeAttributeNS(namespace: string | null, localName: string): void;
-  removeAttributeNode(attr: XMLAttribute): Attr;
+  removeAttributeNode(attr: XMLAttribute): XMLAttribute;
 
   ownerDocument: XMLDocument;
 

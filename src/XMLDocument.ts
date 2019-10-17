@@ -70,7 +70,7 @@ export interface XMLDocument extends XMLNode {
   createProcessingInstruction(
     target: string,
     data: string
-  ): XMLNode & ProcessingInstruction;
+  ): XMLNode;
   /**
    * Creates an instance of the element for the specified tag.
    * @param tagName The name of an element.
@@ -80,11 +80,11 @@ export interface XMLDocument extends XMLNode {
   createElementNS(
     namespaceURI: string | null,
     qualifiedName: string,
-    options?: ElementCreationOptions
+    options?: any
   ): XMLElement;
   createElementNS(
     namespace: string | null,
     qualifiedName: string,
-    options?: ElementCreationOptions
+    options?: any
   ): XMLElement;
 }

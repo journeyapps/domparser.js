@@ -9,7 +9,7 @@ module.exports = config => {
       'karma-spec-reporter'
     ],
     karmaTypescriptConfig: {
-      tsconfig: './tsconfig.karma.json'
+      tsconfig: './tsconfig.test.json'
     },
     client: {
       // leave Jasmine Spec Runner output visible in browser
