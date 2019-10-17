@@ -67,10 +67,7 @@ export interface XMLDocument extends XMLNode {
    * If data contains "?>" an
    * "InvalidCharacterError" DOMException will be thrown.
    */
-  createProcessingInstruction(
-    target: string,
-    data: string
-  ): XMLNode;
+  createProcessingInstruction(target: string, data: string): XMLNode;
   /**
    * Creates an instance of the element for the specified tag.
    * @param tagName The name of an element.
