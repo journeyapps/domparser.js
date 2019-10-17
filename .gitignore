@@ -4,3 +4,4 @@ tsconfig.tsbuildinfo
 coverage
 *.tgz
 .nyc_output
+.idea

@@ -1,18 +1,17 @@
-let ourDOMParser: typeof DOMParser;
-let ourXMLSerializer: typeof XMLSerializer;
+import { XMLNode } from './XMLNode';
+import { XMLElement } from './XMLElement';
+import { DOMParser as DOMParserInterface } from './DOMParser';
+import { XMLSerializer as XMLSerializerInterface } from './XMLSerializer';
+import { DOMImplementation } from './DOMImplementation';
+
+let ourDOMParser: typeof DOMParserInterface;
+let ourXMLSerializer: typeof XMLSerializerInterface;
 let implementation: DOMImplementation;
 
-if (typeof window != 'undefined') {
-  implementation = document.implementation;
-  ourDOMParser = DOMParser;
+if (typeof document != 'undefined') {
+  implementation = document.implementation as DOMImplementation;
+  ourDOMParser = DOMParser as typeof DOMParserInterface;
   ourXMLSerializer = XMLSerializer;
-} else {
-  // @ts-ignore
-  const xmldom = require('xmldom');
-  implementation = new xmldom.DOMImplementation();
-
-  ourDOMParser = xmldom.DOMParser;
-  ourXMLSerializer = xmldom.XMLSerializer;
 }
 
 export {
@@ -20,6 +19,18 @@ export {
   ourDOMParser as DOMParser,
   ourXMLSerializer as XMLSerializer
 };
+
+export function setImplementation(impl: DOMImplementation) {
+  implementation = impl;
+}
+
+export function setParsers(options: {
+  DOMParser: typeof DOMParserInterface;
+  XMLSerializer: typeof XMLSerializerInterface;
+}) {
+  ourDOMParser = options.DOMParser;
+  ourXMLSerializer = options.XMLSerializer;
+}
 
 function same(attr1?: string, attr2?: string) {
   if (attr1 == null) {
@@ -31,7 +42,7 @@ function same(attr1?: string, attr2?: string) {
   return attr1 == attr2;
 }
 
-function isElement(e: Node): e is Element {
+function isElement(e: XMLNode): e is XMLElement {
   return e.nodeType == 1;
 }
 
@@ -40,7 +51,7 @@ function isElement(e: Node): e is Element {
  *
  * xmldom only implements DOM level 2, which doesn't contain this function.
  */
-export function isEqualNode(a: Node, b: Node): boolean {
+export function isEqualNode(a: XMLNode, b: XMLNode): boolean {
   if (typeof a.isEqualNode == 'function') {
     // Use the native version when available
     return a.isEqualNode(b);

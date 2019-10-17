@@ -1,12 +1,13 @@
 {
   "name": "@journeyapps/domparser",
   "description": "Basic XML DOM parsing",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
-  "main": "lib/index.js",
+  "main": "lib/node.js",
+  "browser": "lib/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "ts-node node_modules/jasmine/bin/jasmine test/*_spec.ts",
+    "test": "ts-node --project ./tsconfig.test.json node_modules/jasmine/bin/jasmine test/*_spec.ts",
     "test:browsers": "karma start --single-run",
     "test:sax": "tap sax-test/*.js",
     "pretty": "prettier --write '**/*.{ts,js}'",
@@ -34,6 +35,8 @@
     "xmldom": "^0.1.27"
   },
   "files": [
-    "lib"
+    "lib",
+    "types.d.ts",
+    "types.js"
   ]
 }

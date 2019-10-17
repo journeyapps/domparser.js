@@ -2,6 +2,10 @@ import { XMLError, DOMParser, XMLSerializer, XMLDocument } from '../src';
 
 import './matchers';
 
+if (typeof window == 'undefined') {
+  require('../src/node');
+}
+
 import * as native from '../src/xmldom';
 
 describe('DOMParser', function() {
