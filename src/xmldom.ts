@@ -1,8 +1,6 @@
 import { XMLNode } from './XMLNode';
 import { XMLElement } from './XMLElement';
-import {
-  DOMParser as DOMParserInterface
-} from './DOMParser';
+import { DOMParser as DOMParserInterface } from './DOMParser';
 import { XMLSerializer as XMLSerializerInterface } from './XMLSerializer';
 import { DOMImplementation } from './DOMImplementation';
 

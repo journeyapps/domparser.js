@@ -39,7 +39,10 @@ export interface XMLDocument extends XMLNode {
    */
   getElementsByTagName(qualifiedName: string): IterableNodeList<XMLElement>;
 
-  getElementsByTagNameNS(namespaceURI: string, localName: string): IterableNodeList<XMLElement>;
+  getElementsByTagNameNS(
+    namespaceURI: string,
+    localName: string
+  ): IterableNodeList<XMLElement>;
 
   /**
    * Returns a CDATASection node whose data is data.
