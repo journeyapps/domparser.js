@@ -3,6 +3,7 @@ import { XMLElement } from './XMLElement';
 import { XMLLocator } from './XMLLocator';
 import { XMLNode, XMLCharacterNode } from './XMLNode';
 import { IterableNodeList } from './IterableNodeList';
+import { DOMImplementation } from './DOMImplementation';
 
 /**
  * A Document extended with:
@@ -12,6 +13,8 @@ import { IterableNodeList } from './IterableNodeList';
 export interface XMLDocument extends XMLNode {
   documentElement: XMLElement;
 
+  implementation: DOMImplementation;
+
   errors?: XMLError[];
   xmlVersion?: string;
   locator?: XMLLocator;
@@ -19,6 +22,24 @@ export interface XMLDocument extends XMLNode {
   readonly parentNode: XMLNode | null;
 
   getElementsByTagName(qualifiedName: string): IterableNodeList<XMLElement>;
+  /**
+   * Returns a reference to the first object with the specified value of the ID or NAME attribute.
+   * @param elementId String that specifies the ID value. Case-insensitive.
+   */
+  getElementById(elementId: string): XMLElement | null;
+
+  /**
+   * Gets a collection of objects based on the value of the NAME or ID attribute.
+   * @param elementName Gets a collection of objects based on the value of the NAME or ID attribute.
+   */
+  getElementsByName(elementName: string): IterableNodeList<XMLElement>;
+  /**
+   * Retrieves a collection of objects based on the specified element name.
+   * @param name Specifies the name of an element.
+   */
+  getElementsByTagName(qualifiedName: string): IterableNodeList<XMLElement>;
+
+  getElementsByTagNameNS(namespaceURI: string, localName: string): IterableNodeList<XMLElement>;
 
   /**
    * Returns a CDATASection node whose data is data.

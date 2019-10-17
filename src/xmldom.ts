@@ -1,7 +1,10 @@
 import { XMLNode } from './XMLNode';
 import { XMLElement } from './XMLElement';
-import { DOMImplementation, DOMParser as DOMParserInterface } from './DOMParser';
+import {
+  DOMParser as DOMParserInterface
+} from './DOMParser';
 import { XMLSerializer as XMLSerializerInterface } from './XMLSerializer';
+import { DOMImplementation } from './DOMImplementation';
 
 let ourDOMParser: typeof DOMParserInterface;
 let ourXMLSerializer: typeof XMLSerializerInterface;
@@ -11,13 +14,6 @@ if (typeof document != 'undefined') {
   implementation = document.implementation as DOMImplementation;
   ourDOMParser = DOMParser as typeof DOMParserInterface;
   ourXMLSerializer = XMLSerializer;
-} else {
-  // @ts-ignore
-  const xmldom = require('xmldom');
-  implementation = new xmldom.DOMImplementation();
-
-  ourDOMParser = xmldom.DOMParser;
-  ourXMLSerializer = xmldom.XMLSerializer;
 }
 
 export {
@@ -25,6 +21,18 @@ export {
   ourDOMParser as DOMParser,
   ourXMLSerializer as XMLSerializer
 };
+
+export function setImplementation(impl: DOMImplementation) {
+  implementation = impl;
+}
+
+export function setParsers(options: {
+  DOMParser: typeof DOMParserInterface;
+  XMLSerializer: typeof XMLSerializerInterface;
+}) {
+  ourDOMParser = options.DOMParser;
+  ourXMLSerializer = options.XMLSerializer;
+}
 
 function same(attr1?: string, attr2?: string) {
   if (attr1 == null) {

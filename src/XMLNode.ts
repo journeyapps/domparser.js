@@ -2,6 +2,19 @@ import { XMLElement } from './XMLElement';
 import { XMLDocument } from './XMLDocument';
 import { IterableNodeList } from './IterableNodeList';
 
+export const ELEMENT_NODE = 1;
+export const ATTRIBUTE_NODE = 2;
+export const TEXT_NODE = 3;
+export const CDATA_SECTION_NODE = 4;
+export const ENTITY_REFERENCE_NODE = 5;
+export const ENTITY_NODE = 6;
+export const PROCESSING_INSTRUCTION_NODE = 7;
+export const COMMENT_NODE = 8;
+export const DOCUMENT_NODE = 9;
+export const DOCUMENT_TYPE_NODE = 10;
+export const DOCUMENT_FRAGMENT_NODE = 11;
+export const NOTATION_NODE = 12;
+
 export interface XMLNodeLike {
   readonly nodeType: number;
 
@@ -54,7 +67,7 @@ export interface XMLNode extends XMLNodeLike {
 
   readonly namespaceURI: string;
 
-  readonly textContent: string;
+  textContent: string;
 
   /**
    * Returns a copy of node. If deep is true, the copy also includes the node's descendants.
@@ -65,7 +78,8 @@ export interface XMLNode extends XMLNodeLike {
 
   hasChildNodes(): boolean;
 
-  appendChild<Q extends any>(newChild: Q): Q;
+  appendChild<T extends XMLNode>(newChild: T): T;
+  insertBefore<T extends XMLNode>(newChild: T, refChild: XMLNode | null): T;
 }
 
 export interface XMLCharacterNode extends XMLNode {

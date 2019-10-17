@@ -35,8 +35,31 @@ export interface XMLElement extends XMLNode {
    */
   getAttributeNS(namespace: string | null, localName: string): string | null;
 
+  /**
+   * Returns true if element has an attribute whose qualified name is qualifiedName, and false otherwise.
+   */
+  hasAttribute(qualifiedName: string): boolean;
+  /**
+   * Returns true if element has an attribute whose namespace is namespace and local name is localName.
+   */
+  hasAttributeNS(namespace: string | null, localName: string): boolean;
+  /**
+   * Returns true if element has attributes, and false otherwise.
+   */
+  hasAttributes(): boolean;
+  /**
+   * Removes element's first attribute whose qualified name is qualifiedName.
+   */
+  removeAttribute(qualifiedName: string): void;
+  /**
+   * Removes element's attribute whose namespace is namespace and local name is localName.
+   */
+  removeAttributeNS(namespace: string | null, localName: string): void;
+  removeAttributeNode(attr: XMLAttribute): Attr;
+
   ownerDocument: XMLDocument;
 
+  readonly tagName: string;
   readonly localName: string;
   readonly prefix: string;
   readonly attributes: NamedNodeMap;

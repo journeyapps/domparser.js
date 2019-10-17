@@ -7,6 +7,7 @@ import { XMLDocument } from './XMLDocument';
 import { XMLLocator } from './XMLLocator';
 import { XMLAttributePosition } from './XMLAttributePosition';
 import { XMLNode } from './XMLNode';
+import { DOMImplementation } from './DOMImplementation';
 
 function getMatch(re: RegExp, pos: number, str: string) {
   var match = re.exec(str);
@@ -25,14 +26,6 @@ function errorFromMessage(message: string) {
   var line = parseInt(getMatch(/Line: (\d+)/, 1, message), 10);
   var column = parseInt(getMatch(/Column: (\d+)/, 1, message), 10);
   return new XMLError(msg, { line: line, column: column });
-}
-
-export interface DOMImplementation {
-  createDocument(
-    namespaceURI: string | null,
-    qualifiedName: string | null,
-    type?: any
-  ): XMLDocument;
 }
 
 export interface DOMParserOptions {
