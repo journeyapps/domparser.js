@@ -1781,10 +1781,13 @@ function setBufferLength(length: number) {
 export {
   SAXParser,
   SAXStream,
-  QualifiedTag,
   EVENTS,
   createStream,
   ENTITIES,
   MAX_BUFFER_LENGTH,
   setBufferLength
 };
+
+export type {
+  QualifiedTag
+}
