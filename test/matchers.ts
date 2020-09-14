@@ -1,7 +1,7 @@
 import * as native from '../src/xmldom';
 import 'jasmine';
 
-beforeEach(function() {
+beforeEach(function () {
   function nodeToString(node) {
     return new native.XMLSerializer().serializeToString(node);
   }

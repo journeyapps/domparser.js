@@ -3,14 +3,14 @@ var tap = require('tap');
 
 function testPosition(chunks, expectedEvents) {
   var parser = sax.parser();
-  expectedEvents.forEach(function(expectation) {
-    parser['on' + expectation[0]] = function() {
+  expectedEvents.forEach(function (expectation) {
+    parser['on' + expectation[0]] = function () {
       for (var prop in expectation[1]) {
         tap.equal(parser[prop], expectation[1][prop]);
       }
     };
   });
-  chunks.forEach(function(chunk) {
+  chunks.forEach(function (chunk) {
     parser.write(chunk);
   });
 }

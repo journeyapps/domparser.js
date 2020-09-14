@@ -8,8 +8,8 @@ Line 1
  `;
 
 // While this does not test any of our own code, it describes how we expect the SAX parser to behave.
-describe('PositionTracker', function() {
-  it('should calculate the same positions as the naive implementation', function() {
+describe('PositionTracker', function () {
+  it('should calculate the same positions as the naive implementation', function () {
     const tracker = new XMLLocator(sampleDoc);
     const slowTracker = new SlowLocator(sampleDoc);
     for (let i = 0; i <= sampleDoc.length + 5; i++) {
@@ -20,7 +20,7 @@ describe('PositionTracker', function() {
     }
   });
 
-  it('should report the correct locations', function() {
+  it('should report the correct locations', function () {
     var locator = new XMLLocator('test\n1\n23');
     expect(locator.position(0)).toEqual({ line: 0, column: 0 });
     expect(locator.position(1)).toEqual({ line: 0, column: 1 });
@@ -34,24 +34,24 @@ describe('PositionTracker', function() {
     expect(locator.position(9)).toEqual({ line: 2, column: 2 });
   });
 
-  it('should handle a single line', function() {
+  it('should handle a single line', function () {
     var locator = new XMLLocator('test');
     expect(locator.position(0)).toEqual({ line: 0, column: 0 });
     expect(locator.position(4)).toEqual({ line: 0, column: 4 });
   });
 
-  it('should handle an empty string', function() {
+  it('should handle an empty string', function () {
     var locator = new XMLLocator('');
     expect(locator.position(0)).toEqual({ line: 0, column: 0 });
   });
 
-  it('should gracefully handle out-of-bound positions', function() {
+  it('should gracefully handle out-of-bound positions', function () {
     var locator = new XMLLocator('test\nmore');
     expect(locator.position(-1)).toEqual({ line: 0, column: 0 });
     expect(locator.position(50)).toEqual({ line: 2, column: 0 });
   });
 
-  it('should handle consecutive newlines', function() {
+  it('should handle consecutive newlines', function () {
     var locator = new XMLLocator('\n\n\n\n');
     expect(locator.position(0)).toEqual({ line: 0, column: 0 });
     expect(locator.position(1)).toEqual({ line: 1, column: 0 });

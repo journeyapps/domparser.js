@@ -78,7 +78,7 @@ var ex1 = [
 var ex2 = [ex1[0], ex1[1], ex1[3], ex1[2]].concat(ex1.slice(4));
 var expected = [ex1, ex2];
 
-xmls.forEach(function(x, i) {
+xmls.forEach(function (x, i) {
   t.test({
     xml: x,
     expect: expected[i],

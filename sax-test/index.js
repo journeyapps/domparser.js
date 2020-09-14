@@ -12,8 +12,8 @@ exports.test = function test(options) {
   var parser = sax.parser(options.strict, options.opt);
   var expect = options.expect;
   var e = 0;
-  sax.EVENTS.forEach(function(ev) {
-    parser['on' + ev] = function(n) {
+  sax.EVENTS.forEach(function (ev) {
+    parser['on' + ev] = function (n) {
       if (process.env.DEBUG) {
         console.error({
           expect: expect[e],

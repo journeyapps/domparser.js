@@ -96,7 +96,7 @@ interface SAXEventArgs {
   onsgmldeclaration: void;
   ondoctype: void;
   oncomment: string;
-  onopentagstart: void;
+  onopentagstart: QualifiedTag;
   onattribute: Attribute;
   onopentag: QualifiedTag;
   onclosetag: QualifiedTag;
@@ -172,7 +172,7 @@ class SAXParser implements SAXEvents {
   onsgmldeclaration: () => void;
   ondoctype: () => void;
   oncomment: (comment: string) => void;
-  onopentagstart: () => void;
+  onopentagstart: (node: QualifiedTag) => void;
   onattribute: (attr: Attribute) => void;
   onopentag: (node: QualifiedTag) => void;
   onclosetag: (node: QualifiedTag) => void;
@@ -242,7 +242,7 @@ class SAXParser implements SAXEvents {
 }
 
 if (!Object.create) {
-  Object.create = function(o) {
+  Object.create = function (o) {
     function F() {}
     F.prototype = o;
     var newf = new F();
@@ -251,7 +251,7 @@ if (!Object.create) {
 }
 
 if (!Object.keys) {
-  Object.keys = function(o) {
+  Object.keys = function (o) {
     var a = [];
     for (var i in o) if (o.hasOwnProperty(i)) a.push(i);
     return a;
@@ -316,10 +316,10 @@ var Stream;
 try {
   Stream = require('stream').Stream;
 } catch (ex) {
-  Stream = function() {};
+  Stream = function () {};
 }
 
-var streamWraps = sax.EVENTS.filter(function(ev) {
+var streamWraps = sax.EVENTS.filter(function (ev) {
   return ev !== 'error' && ev !== 'end';
 });
 
@@ -342,11 +342,11 @@ class SAXStream extends Stream {
 
     var me = this;
 
-    this._parser.onend = function() {
+    this._parser.onend = function () {
       me.emit('end');
     };
 
-    this._parser.onerror = function(er) {
+    this._parser.onerror = function (er) {
       me.emit('error', er);
 
       // if didn't throw, then means error was handled.
@@ -356,12 +356,12 @@ class SAXStream extends Stream {
 
     this._decoder = null;
 
-    streamWraps.forEach(function(ev) {
+    streamWraps.forEach(function (ev) {
       Object.defineProperty(me, 'on' + ev, {
-        get: function() {
+        get: function () {
           return me._parser['on' + ev];
         },
-        set: function(h) {
+        set: function (h) {
           if (!h) {
             me.removeAllListeners(ev);
             me._parser['on' + ev] = h;
@@ -404,7 +404,7 @@ class SAXStream extends Stream {
   on(ev, handler) {
     var me = this;
     if (!me._parser['on' + ev] && streamWraps.indexOf(ev) !== -1) {
-      me._parser['on' + ev] = function() {
+      me._parser['on' + ev] = function () {
         var args =
           arguments.length === 1
             ? [arguments[0]]
@@ -765,7 +765,7 @@ const BASE_ENTITIES = {
 
 sax.ENTITIES = {};
 
-Object.keys(BASE_ENTITIES).forEach(function(key) {
+Object.keys(BASE_ENTITIES).forEach(function (key) {
   var e = BASE_ENTITIES[key];
   var s = typeof e === 'number' ? String.fromCharCode(e) : e;
   sax.ENTITIES[key] = s;
@@ -961,7 +961,7 @@ function openTag(parser: SAXParser, selfClosing?: boolean) {
 
     var parent = parser.tags[parser.tags.length - 1] || parser;
     if (tag.ns && parent.ns !== tag.ns) {
-      Object.keys(tag.ns).forEach(function(p) {
+      Object.keys(tag.ns).forEach(function (p) {
         emitNode(parser, 'onopennamespace', {
           prefix: p,
           uri: tag.ns[p]
@@ -1089,7 +1089,7 @@ function closeTag(parser: SAXParser) {
     var parent = parser.tags[parser.tags.length - 1] || parser;
     if (parser.opt.xmlns && tag.ns !== parent.ns) {
       // remove namespace bindings introduced by tag
-      Object.keys(tag.ns).forEach(function(p) {
+      Object.keys(tag.ns).forEach(function (p) {
         var n = tag.ns[p];
         emitNode(parser, 'onclosenamespace', { prefix: p, uri: n });
       });
@@ -1713,10 +1713,10 @@ function write(this: SAXParser, chunk: string | any) {
 /*! http://mths.be/fromcodepoint v0.1.0 by @mathias */
 /* istanbul ignore next */
 if (!String.fromCodePoint) {
-  (function() {
+  (function () {
     var stringFromCharCode = String.fromCharCode;
     var floor = Math.floor;
-    var fromCodePoint = function() {
+    var fromCodePoint = function () {
       var MAX_SIZE = 0x4000;
       var codeUnits = [];
       var highSurrogate;
@@ -1781,10 +1781,11 @@ function setBufferLength(length: number) {
 export {
   SAXParser,
   SAXStream,
-  QualifiedTag,
   EVENTS,
   createStream,
   ENTITIES,
   MAX_BUFFER_LENGTH,
   setBufferLength
 };
+
+export type { QualifiedTag };

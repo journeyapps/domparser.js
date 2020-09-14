@@ -1,7 +1,7 @@
 var parser = require('../lib/sax').parser(true);
 var t = require('tap');
 t.plan(1);
-parser.onopentag = function(node) {
+parser.onopentag = function (node) {
   t.same(node, { name: 'x', attributes: {}, isSelfClosing: false });
 };
 var xml = new Buffer('<x>y</x>');
