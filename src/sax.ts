@@ -1788,6 +1788,4 @@ export {
   setBufferLength
 };
 
-export type {
-  QualifiedTag
-}
+export type { QualifiedTag };
