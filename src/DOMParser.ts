@@ -57,10 +57,7 @@ export class DOMParser {
       // Would be better to improve the behavior in the SAX parser.
       const previous = errors[errors.length - 1];
 
-      if (
-        previous &&
-        (error.startOffset - previous.startOffset <= 2)
-      ) {
+      if (previous && error.startOffset - previous.startOffset <= 2) {
         if (previous.message == 'Unexpected close tag') {
           // In this case, the new message is likely more informative.
           errors.pop();
@@ -73,13 +70,13 @@ export class DOMParser {
       }
     }
 
-    parser.onerror = function(e) {
+    parser.onerror = function (e) {
       parser.error = null; // Let the parser continue
       const error = errorFromParser(e, parser, locator);
       addUnlessDuplicate(error);
     };
 
-    parser.ontext = function(t) {
+    parser.ontext = function (t) {
       if (current && current != doc) {
         const node = doc.createTextNode(t);
         current.appendChild(node);
@@ -88,20 +85,26 @@ export class DOMParser {
 
     let currentAttributes: Record<string, boolean> = {};
 
-    parser.onopentagstart = function(tag) {
+    parser.onopentagstart = function (tag) {
       currentAttributes = {};
-    }
+    };
 
-    parser.onattribute = function(attr) {
+    parser.onattribute = function (attr) {
       const name = attr.name;
       if (name in currentAttributes) {
-        addUnlessDuplicate(new XMLError(`Attribute '${name}' redefined.`, { start: attr.start - 1, end: attr.start + attr.name.length - 1 }, locator));
+        addUnlessDuplicate(
+          new XMLError(
+            `Attribute '${name}' redefined.`,
+            { start: attr.start - 1, end: attr.start + attr.name.length - 1 },
+            locator
+          )
+        );
       } else {
         currentAttributes[name] = true;
       }
-    }
+    };
 
-    parser.onopentag = function(node: sax.QualifiedTag) {
+    parser.onopentag = function (node: sax.QualifiedTag) {
       const element = doc.createElementNS(node.uri, node.name) as XMLElement;
       element.openStart = parser.startTagPosition - 1;
       element.nameStart = element.openStart + 1;
@@ -136,7 +139,7 @@ export class DOMParser {
       current = element;
     };
 
-    parser.onclosetag = function() {
+    parser.onclosetag = function () {
       let currentElement = current as XMLElement;
       currentElement.closeStart = parser.startTagPosition - 1;
       currentElement.closeEnd = parser.position;
@@ -144,7 +147,7 @@ export class DOMParser {
       current = current.parentNode;
     };
 
-    parser.onprocessinginstruction = function(instruction) {
+    parser.onprocessinginstruction = function (instruction) {
       var node = doc.createProcessingInstruction(
         instruction.name,
         instruction.body
@@ -152,11 +155,11 @@ export class DOMParser {
       doc.appendChild(node);
     };
 
-    parser.oncdata = function(cdata) {
+    parser.oncdata = function (cdata) {
       current.appendChild(doc.createCDATASection(cdata));
     };
 
-    parser.oncomment = function(comment) {
+    parser.oncomment = function (comment) {
       current.appendChild(doc.createComment(comment));
     };
 

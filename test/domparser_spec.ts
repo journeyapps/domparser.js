@@ -8,7 +8,7 @@ if (typeof window == 'undefined') {
 
 import * as native from '../src/xmldom';
 
-describe('DOMParser', function() {
+describe('DOMParser', function () {
   function testReadWrite(source: string) {
     const doc = new DOMParser().parseFromString(source);
     const serialized = new XMLSerializer().serializeToString(doc);
@@ -28,18 +28,18 @@ describe('DOMParser', function() {
     expect(ours.xmlVersion).toEqual((browser as XMLDocument).xmlVersion);
   }
 
-  it('should preserve the xml processing instructions', function() {
+  it('should preserve the xml processing instructions', function () {
     testReadWrite('<?xml version="1.0"?>\n<xml>Hello<test>me</test></xml>');
     testReadWrite(
       '<?xml version="1.0" encoding="UTF-8"?>\n<xml>Hello<test>me</test></xml>'
     );
   });
 
-  it('should parse the sample document', function() {
+  it('should parse the sample document', function () {
     testReadWrite('<xml>Hello, <who name="world">world</who>!<br/></xml>');
   });
 
-  it('should preserve namespaces', function() {
+  it('should preserve namespaces', function () {
     testReadWrite(
       '<?xml version="1.0"?>\n<schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="unqualified"><simpleType name="name"/></schema>'
     );
@@ -51,25 +51,25 @@ describe('DOMParser', function() {
     );
   });
 
-  it('should preserve newlines in the document', function() {
+  it('should preserve newlines in the document', function () {
     testReadWrite(
       '<xml>Hel\nlo, \n<who name="world">world\n</who>\n!<br/></xml>'
     );
   });
 
-  it('should preserve entities', function() {
+  it('should preserve entities', function () {
     testReadWrite('<xml>Hello, &lt;yes</xml>');
   });
 
-  it('should preserve CDATA', function() {
+  it('should preserve CDATA', function () {
     testReadWrite('<xml> <![CDATA[ SOME \n<DATA>\n]]> !</xml>');
   });
 
-  it('should preserve comments', function() {
+  it('should preserve comments', function () {
     testReadWrite('<xml><!-- a comment --></xml>');
   });
 
-  it('should parse a text node', function() {
+  it('should parse a text node', function () {
     const doc = new DOMParser().parseFromString(
       '<?xml version="1.0"?>\n<test>\n<b>Some\n&lt;Text&gt;</b>\n</test>'
     );
@@ -78,7 +78,7 @@ describe('DOMParser', function() {
     expect(text.textContent).toBe('Some\n<Text>');
   });
 
-  it('should record line and column of elements', function() {
+  it('should record line and column of elements', function () {
     const doc = new DOMParser().parseFromString(
       '<?xml version="1.0"?>\n<test>\n<me><b /></me></test>'
     );
@@ -103,7 +103,7 @@ describe('DOMParser', function() {
     expect(elmb.closeEnd).toEqual(38);
   });
 
-  it('should record positions of attributes', function() {
+  it('should record positions of attributes', function () {
     const doc = new DOMParser().parseFromString(
       '<?xml version="1.0"?>\n<xml>\n<test attr="value" /></test></xml>'
     );
@@ -118,20 +118,20 @@ describe('DOMParser', function() {
     expect(position.valueStart).toEqual(39);
   });
 
-  describe('error handling', function() {
+  describe('error handling', function () {
     function errorsFor(source) {
       const doc = new DOMParser().parseFromString(source);
       return doc.errors;
     }
 
-    it('should report an unclosed root tag', function() {
+    it('should report an unclosed root tag', function () {
       const errors = errorsFor('<xml>');
       expect(errors).toEqual([
         errorMatching('Unclosed root tag', { start: 4, end: 5 })
       ]);
     });
 
-    it('should report an unclosed comment', function() {
+    it('should report an unclosed comment', function () {
       const errors = errorsFor('<xml><!--</xml>');
       expect(errors).toEqual([
         // OR: 'Unexpected end'
@@ -139,7 +139,7 @@ describe('DOMParser', function() {
       ]);
     });
 
-    it('should report an unquoted attribute tag', function() {
+    it('should report an unquoted attribute tag', function () {
       const errors = errorsFor('<xml><a attr=test /></xml>');
       expect(errors).toEqual([
         errorMatching('Unquoted attribute value', {
@@ -149,7 +149,7 @@ describe('DOMParser', function() {
       ]);
     });
 
-    it('should report an unclosed element tag', function() {
+    it('should report an unclosed element tag', function () {
       const errors = errorsFor('<xml><a></xml>');
       expect(errors).toEqual([
         errorMatching('Unexpected close tag', {
@@ -159,7 +159,7 @@ describe('DOMParser', function() {
       ]);
     });
 
-    it('should report an invalid closing tag', function() {
+    it('should report an invalid closing tag', function () {
       const errors = errorsFor('<xml><a></b></a></xml>');
       expect(errors).toEqual([
         errorMatching('Unmatched closing tag: b', {
@@ -170,7 +170,7 @@ describe('DOMParser', function() {
       // Alternative message: Unexpected close tag
     });
 
-    it('should report an empty closing tag', function() {
+    it('should report an empty closing tag', function () {
       const errors = errorsFor('<xml></></xml>');
       expect(errors).toEqual([
         errorMatching('Invalid tagname in closing tag.', {
@@ -180,13 +180,13 @@ describe('DOMParser', function() {
       ]);
     });
 
-    xit('should report an invalid xml version', function() {
+    xit('should report an invalid xml version', function () {
       // This check is not implemented yet
       const errors = errorsFor('<?xml version="notsupported"?><xml></xml>');
       expect(errors.length).toBe(1);
     });
 
-    it('should handle an attribute without a value', function() {
+    it('should handle an attribute without a value', function () {
       const xml = '<test to   ></test>';
       const errors = errorsFor(xml);
       expect(errors).toEqual([
@@ -194,7 +194,7 @@ describe('DOMParser', function() {
       ]);
     });
 
-    it('should handle an attribute without a value in self-closing tag', function() {
+    it('should handle an attribute without a value in self-closing tag', function () {
       const xml = '<test to />';
       const errors = errorsFor(xml);
       expect(errors[0]).toEqual(
@@ -205,7 +205,7 @@ describe('DOMParser', function() {
       // 2. Unclosed root tag
     });
 
-    it('should report duplicate attribute keys', function() {
+    it('should report duplicate attribute keys', function () {
       const errors = errorsFor(
         '<xml><a attr="test1" attr="test2"><b attr="test3" xmlns:attr="test4" /></a></xml>'
       );
@@ -216,8 +216,8 @@ describe('DOMParser', function() {
   });
 });
 
-describe('XMLSerializer', function() {
-  it('should serialize built-in processing instructions', function() {
+describe('XMLSerializer', function () {
+  it('should serialize built-in processing instructions', function () {
     // Test that this works with documents parsed by the native DOMParser, at least as well as the native.
     // XMLSerializer.
 
@@ -236,7 +236,10 @@ describe('XMLSerializer', function() {
   });
 });
 
-function errorMatching(message: string, position: {start: number, end: number}) {
+function errorMatching(
+  message: string,
+  position: { start: number; end: number }
+) {
   return jasmine.objectContaining({
     message,
     startOffset: position.start,

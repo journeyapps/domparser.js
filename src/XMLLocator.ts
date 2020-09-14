@@ -8,7 +8,7 @@ export class XMLLocator {
       throw new Error('source is required');
     }
 
-    const lines = source.split('\n').map(line => line.length + 1);
+    const lines = source.split('\n').map((line) => line.length + 1);
     this.cumulative = cumulative(lines);
   }
 
