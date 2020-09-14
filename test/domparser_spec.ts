@@ -1,4 +1,4 @@
-import { XMLError, DOMParser, XMLSerializer, XMLDocument } from '../src';
+import { DOMParser, XMLSerializer, XMLDocument } from '../src';
 
 import './matchers';
 
@@ -9,16 +9,16 @@ if (typeof window == 'undefined') {
 import * as native from '../src/xmldom';
 
 describe('DOMParser', function() {
-  function testReadWrite(source) {
-    var doc = new DOMParser().parseFromString(source);
-    var serialized = new XMLSerializer().serializeToString(doc);
+  function testReadWrite(source: string) {
+    const doc = new DOMParser().parseFromString(source);
+    const serialized = new XMLSerializer().serializeToString(doc);
     expect(serialized).toEqual(source);
     testSameDOM(source);
   }
 
-  function testSameDOM(source) {
-    var ours = new DOMParser().parseFromString(source);
-    var browser = new native.DOMParser().parseFromString(source, 'text/xml');
+  function testSameDOM(source: string) {
+    const ours = new DOMParser().parseFromString(source);
+    const browser = new native.DOMParser().parseFromString(source, 'text/xml');
 
     // We only test from the document element down, not the document itself. The built-in DOMParser tends to interpret
     // the processing instructions, while we just include it in the DOM.
@@ -70,21 +70,21 @@ describe('DOMParser', function() {
   });
 
   it('should parse a text node', function() {
-    var doc = new DOMParser().parseFromString(
+    const doc = new DOMParser().parseFromString(
       '<?xml version="1.0"?>\n<test>\n<b>Some\n&lt;Text&gt;</b>\n</test>'
     );
 
-    var text = doc.getElementsByTagName('b')[0].firstChild;
+    const text = doc.getElementsByTagName('b')[0].firstChild;
     expect(text.textContent).toBe('Some\n<Text>');
   });
 
   it('should record line and column of elements', function() {
-    var doc = new DOMParser().parseFromString(
+    const doc = new DOMParser().parseFromString(
       '<?xml version="1.0"?>\n<test>\n<me><b /></me></test>'
     );
 
-    var elmb = doc.getElementsByTagName('b')[0];
-    var elmme = doc.getElementsByTagName('me')[0];
+    const elmb = doc.getElementsByTagName('b')[0];
+    const elmme = doc.getElementsByTagName('me')[0];
 
     expect(elmme.openStart).toEqual(29);
     expect(elmme.openEnd).toEqual(33);
@@ -104,14 +104,14 @@ describe('DOMParser', function() {
   });
 
   it('should record positions of attributes', function() {
-    var doc = new DOMParser().parseFromString(
+    const doc = new DOMParser().parseFromString(
       '<?xml version="1.0"?>\n<xml>\n<test attr="value" /></test></xml>'
     );
-    var elm = doc.getElementsByTagName('test')[0];
-    var attr = elm.attributes[0];
+    const elm = doc.getElementsByTagName('test')[0];
+    const attr = elm.attributes[0];
     expect(attr.name).toBe('attr');
     expect(attr.value).toBe('value');
-    var position = elm.attributePositions.attr;
+    const position = elm.attributePositions.attr;
     expect(position.start).toEqual(34);
     expect(position.end).toEqual(46);
     expect(position.nameEnd).toEqual(38);
@@ -120,94 +120,97 @@ describe('DOMParser', function() {
 
   describe('error handling', function() {
     function errorsFor(source) {
-      var doc = new DOMParser().parseFromString(source);
+      const doc = new DOMParser().parseFromString(source);
       return doc.errors;
     }
 
     it('should report an unclosed root tag', function() {
-      var errors = errorsFor('<xml>');
-      expect(errors.length).toBe(1);
-      expect(errors[0]).toEqual(
-        new XMLError({
-          message: 'Unclosed root tag',
-          line: 0,
-          column: 5
-        })
-      );
+      const errors = errorsFor('<xml>');
+      expect(errors).toEqual([
+        errorMatching('Unclosed root tag', { start: 4, end: 5 })
+      ]);
     });
 
     it('should report an unclosed comment', function() {
-      var errors = errorsFor('<xml><!--</xml>');
-      // expect(errors.length).toBe(1);
+      const errors = errorsFor('<xml><!--</xml>');
       expect(errors).toEqual([
-        new XMLError({
-          message: 'Unexpected end',
-          line: 0,
-          column: 15
-        })
+        // OR: 'Unexpected end'
+        errorMatching('Unclosed root tag', { start: 14, end: 15 })
       ]);
     });
 
     it('should report an unquoted attribute tag', function() {
-      var errors = errorsFor('<xml><a attr=test /></xml>');
-      expect(errors.length).toBe(1);
-      expect(errors[0]).toEqual(
-        new XMLError({
-          message: 'Unquoted attribute value',
-          line: 0,
-          column: 14
+      const errors = errorsFor('<xml><a attr=test /></xml>');
+      expect(errors).toEqual([
+        errorMatching('Unquoted attribute value', {
+          start: 13,
+          end: 14 // or 17
         })
-      );
+      ]);
     });
 
     it('should report an unclosed element tag', function() {
-      var errors = errorsFor('<xml><a></xml>');
-      expect(errors.length).toBe(1);
-      expect(errors[0]).toEqual(
-        new XMLError({
-          message: 'Unexpected close tag',
-          line: 0,
-          column: 14
+      const errors = errorsFor('<xml><a></xml>');
+      expect(errors).toEqual([
+        errorMatching('Unexpected close tag', {
+          start: 8,
+          end: 14
         })
-      );
+      ]);
     });
 
     it('should report an invalid closing tag', function() {
-      var errors = errorsFor('<xml><a></b></a></xml>');
-      expect(errors.length).toBe(1);
-      expect(errors[0]).toEqual(
-        new XMLError({
-          message: 'Unmatched closing tag: b',
-          line: 0,
-          column: 12
+      const errors = errorsFor('<xml><a></b></a></xml>');
+      expect(errors).toEqual([
+        errorMatching('Unmatched closing tag: b', {
+          start: 8,
+          end: 12
         })
-      );
+      ]);
       // Alternative message: Unexpected close tag
     });
 
     it('should report an empty closing tag', function() {
-      var errors = errorsFor('<xml></></xml>');
-      expect(errors.length).toBe(1);
-      expect(errors[0]).toEqual(
-        new XMLError({
-          message: 'Invalid tagname in closing tag.',
-          line: 0,
-          column: 8
+      const errors = errorsFor('<xml></></xml>');
+      expect(errors).toEqual([
+        errorMatching('Invalid tagname in closing tag.', {
+          start: 7,
+          end: 8
         })
-      );
+      ]);
     });
 
     xit('should report an invalid xml version', function() {
       // This check is not implemented yet
-      var errors = errorsFor('<?xml version="notsupported"?><xml></xml>');
+      const errors = errorsFor('<?xml version="notsupported"?><xml></xml>');
       expect(errors.length).toBe(1);
     });
 
     it('should handle an attribute without a value', function() {
-      var xml = '<test t />';
-      var errors = errorsFor(xml);
+      const xml = '<test to   ></test>';
+      const errors = errorsFor(xml);
       expect(errors).toEqual([
-        new XMLError({ message: 'Invalid attribute name', line: 0, column: 9 })
+        errorMatching('Attribute without value', { start: 6, end: 8 })
+      ]);
+    });
+
+    it('should handle an attribute without a value in self-closing tag', function() {
+      const xml = '<test to />';
+      const errors = errorsFor(xml);
+      expect(errors[0]).toEqual(
+        errorMatching('Attribute without value', { start: 6, end: 8 })
+      );
+      // Additionally reports:
+      // 1. Invalid attribute name
+      // 2. Unclosed root tag
+    });
+
+    it('should report duplicate attribute keys', function() {
+      const errors = errorsFor(
+        '<xml><a attr="test1" attr="test2"><b attr="test3" xmlns:attr="test4" /></a></xml>'
+      );
+      expect(errors).toEqual([
+        errorMatching(`Attribute 'attr' redefined.`, { start: 21, end: 25 })
       ]);
     });
   });
@@ -223,12 +226,20 @@ describe('XMLSerializer', function() {
     // Chrome: '<?xml version="1.0"?><xml>Test</xml>'
     // PhantomJS: '<xml>Test</xml>'
 
-    var doc = new native.DOMParser().parseFromString(
+    const doc = new native.DOMParser().parseFromString(
       '<?xml version="1.0"?>\n<xml>Test</xml>',
       'text/xml'
     );
-    var serialized = new XMLSerializer().serializeToString(doc);
-    var nativeSerialized = new native.XMLSerializer().serializeToString(doc);
+    const serialized = new XMLSerializer().serializeToString(doc);
+    const nativeSerialized = new native.XMLSerializer().serializeToString(doc);
     expect(serialized).toEqual(nativeSerialized);
   });
 });
+
+function errorMatching(message: string, position: {start: number, end: number}) {
+  return jasmine.objectContaining({
+    message,
+    startOffset: position.start,
+    endOffset: position.end
+  });
+}

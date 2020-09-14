@@ -96,7 +96,7 @@ interface SAXEventArgs {
   onsgmldeclaration: void;
   ondoctype: void;
   oncomment: string;
-  onopentagstart: void;
+  onopentagstart: QualifiedTag;
   onattribute: Attribute;
   onopentag: QualifiedTag;
   onclosetag: QualifiedTag;
@@ -172,7 +172,7 @@ class SAXParser implements SAXEvents {
   onsgmldeclaration: () => void;
   ondoctype: () => void;
   oncomment: (comment: string) => void;
-  onopentagstart: () => void;
+  onopentagstart: (node: QualifiedTag) => void;
   onattribute: (attr: Attribute) => void;
   onopentag: (node: QualifiedTag) => void;
   onclosetag: (node: QualifiedTag) => void;

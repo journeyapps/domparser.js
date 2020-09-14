@@ -18,16 +18,6 @@ function getMatch(re: RegExp, pos: number, str: string) {
   }
 }
 
-function errorFromMessage(message: string) {
-  if (typeof message != 'string') {
-    throw message;
-  }
-  var msg = message.split('\n')[0];
-  var line = parseInt(getMatch(/Line: (\d+)/, 1, message), 10);
-  var column = parseInt(getMatch(/Column: (\d+)/, 1, message), 10);
-  return new XMLError(msg, { line: line, column: column });
-}
-
 export interface DOMParserOptions {
   implementation: DOMImplementation;
 }
@@ -69,37 +59,50 @@ export class DOMParser {
 
       if (
         previous &&
-        previous.line == error.line &&
-        previous.column == error.column
+        (error.startOffset - previous.startOffset <= 2)
       ) {
-        // We expect the last message to be more informative - drop the previous message
-        errors.pop();
-        errors.push(error);
-      } else if (
-        previous &&
-        previous.message == error.message &&
-        previous.line == error.line
-      ) {
-        // Ignore, even if the columns are different
-        // Typically the first error will have the most accurate column
+        if (previous.message == 'Unexpected close tag') {
+          // In this case, the new message is likely more informative.
+          errors.pop();
+          errors.push(error);
+        } else {
+          // Keep the previous message
+        }
       } else {
         errors.push(error);
       }
     }
+
     parser.onerror = function(e) {
-      var error = errorFromParser(e, parser);
+      parser.error = null; // Let the parser continue
+      const error = errorFromParser(e, parser, locator);
       addUnlessDuplicate(error);
     };
 
     parser.ontext = function(t) {
       if (current && current != doc) {
-        var node = doc.createTextNode(t);
+        const node = doc.createTextNode(t);
         current.appendChild(node);
       }
     };
 
+    let currentAttributes: Record<string, boolean> = {};
+
+    parser.onopentagstart = function(tag) {
+      currentAttributes = {};
+    }
+
+    parser.onattribute = function(attr) {
+      const name = attr.name;
+      if (name in currentAttributes) {
+        addUnlessDuplicate(new XMLError(`Attribute '${name}' redefined.`, { start: attr.start - 1, end: attr.start + attr.name.length - 1 }, locator));
+      } else {
+        currentAttributes[name] = true;
+      }
+    }
+
     parser.onopentag = function(node: sax.QualifiedTag) {
-      var element = doc.createElementNS(node.uri, node.name) as XMLElement;
+      const element = doc.createElementNS(node.uri, node.name) as XMLElement;
       element.openStart = parser.startTagPosition - 1;
       element.nameStart = element.openStart + 1;
       element.nameEnd = element.nameStart + node.name.length;
@@ -107,8 +110,8 @@ export class DOMParser {
       element.attributePositions = {};
 
       // We have: parser.line, parser.column, parser.position, parser.startTagPosition
-      for (var key in node.attributes) {
-        var attr = node.attributes[key] as sax.Attribute;
+      for (let key in node.attributes) {
+        const attr = node.attributes[key] as sax.Attribute;
         // Attribute nodes seem to be deprecated in general.
         // doc.createAttributeNS does not work for some cases in PhantomJS, e.g.
         //   `xmlns="http://www.w3.org/2001/XMLSchema"`:
@@ -116,7 +119,7 @@ export class DOMParser {
         // Also, it was removed in Chrome 34.
         // Custom attributes on nodes also disappear sometimes in Chrome.
         // The solution is to store the attribute positions on the element node.
-        var position: XMLAttributePosition = {
+        const position: XMLAttributePosition = {
           start: (attr as any).start - 1,
           end: (attr as any).end,
           nameEnd: 0,
@@ -160,7 +163,9 @@ export class DOMParser {
     try {
       parser.write(source).close();
     } catch (err) {
-      addUnlessDuplicate(errorFromMessage(err.message));
+      if (errors.length == 0) {
+        errors.push(new XMLError(err.message, { start: 0, end: 5 }, locator));
+      }
     }
 
     doc.errors = errors;
