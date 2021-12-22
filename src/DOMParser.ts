@@ -163,6 +163,11 @@ export class DOMParser {
       current.appendChild(doc.createComment(comment));
     };
 
+    //XML needs to start with <...(root element) or <?...(prolog) but not a comment <!-...
+    if(source != null && (source.startsWith("<") !== true || source.startsWith("<!-") === true)){
+      errors.push(new XMLError("XML must start with prolong or root element.", {start: 0, end: 1}, locator))
+    }
+
     try {
       parser.write(source).close();
     } catch (err) {
