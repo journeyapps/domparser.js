@@ -166,11 +166,11 @@ export class DOMParser {
     //XML needs to start with <...(root element) or <?...(prolog) but not a comment <!-...
     if (
       source != null &&
-      (source.startsWith('<') !== true || source.startsWith('<!-') === true)
+      (!source.startsWith('<') || source.startsWith('<!--'))
     ) {
       errors.push(
         new XMLError(
-          'XML must start with prolong or root element.',
+          'XML must start with prolog or root element.',
           { start: 0, end: 1 },
           locator
         )

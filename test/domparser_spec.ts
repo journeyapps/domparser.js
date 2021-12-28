@@ -213,6 +213,17 @@ describe('DOMParser', function () {
         errorMatching(`Attribute 'attr' redefined.`, { start: 21, end: 25 })
       ]);
     });
+
+    it('should not allow views to start with an empty line', function () {
+      let source: string = '\n<view title="Test"></view>';
+      let errors = errorsFor(source);
+      expect(errors).toEqual([
+        errorMatching('XML must start with prolog or root element.', {
+          start: 0,
+          end: 1
+        })
+      ]);
+    });
   });
 });
 
