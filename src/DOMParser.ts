@@ -163,6 +163,20 @@ export class DOMParser {
       current.appendChild(doc.createComment(comment));
     };
 
+    //XML needs to start with <...(root element) or <?...(prolog) but not a comment <!-...
+    if (
+      source != null &&
+      (!source.startsWith('<') || source.startsWith('<!--'))
+    ) {
+      errors.push(
+        new XMLError(
+          'XML must start with prolog or root element.',
+          { start: 0, end: 1 },
+          locator
+        )
+      );
+    }
+
     try {
       parser.write(source).close();
     } catch (err) {

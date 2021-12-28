@@ -1,7 +1,7 @@
 {
   "name": "@journeyapps/domparser",
   "description": "Basic XML DOM parsing",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "license": "MIT",
   "main": "lib/node.js",
   "browser": "lib/index.js",
