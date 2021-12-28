@@ -214,7 +214,7 @@ describe('DOMParser', function () {
       ]);
     });
 
-    it('should not allow views to start with an empty line', function () {
+    it('should report xml strings not starting with prolog or root element', function () {
       let source: string = '\n<view title="Test"></view>';
       let errors = errorsFor(source);
       expect(errors).toEqual([
