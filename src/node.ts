@@ -2,7 +2,7 @@ import { setImplementation, setParsers } from './xmldom';
 
 export * from './index';
 
-const xmldom = require('xmldom');
+const xmldom = require('@xmldom/xmldom');
 
 setImplementation(new xmldom.DOMImplementation());
 setParsers(xmldom);

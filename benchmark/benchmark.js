@@ -6,7 +6,7 @@ const Benchmark = require('benchmark');
 const suite = new Benchmark.Suite('XML Parser benchmark');
 
 const { DOMParser } = require('..');
-const xmldom = require('xmldom');
+const xmldom = require('@xmldom/xmldom');
 const fxp = require('fast-xml-parser');
 
 const fs = require('fs');

@@ -9,8 +9,8 @@ let ourXMLSerializer: typeof XMLSerializerInterface;
 let implementation: DOMImplementation;
 
 if (typeof document != 'undefined') {
-  implementation = document.implementation as DOMImplementation;
-  ourDOMParser = DOMParser as typeof DOMParserInterface;
+  implementation = (<any>document.implementation) as DOMImplementation;
+  ourDOMParser = (<any>DOMParser) as typeof DOMParserInterface;
   ourXMLSerializer = XMLSerializer;
 }
 

@@ -2,6 +2,8 @@ import { DOMParser, XMLSerializer, XMLDocument } from '../src';
 
 import './matchers';
 
+const log = (...args:any[]) => console.log('[DOMParser Test]:', ...args);
+
 if (typeof window == 'undefined') {
   require('../src/node');
 }
@@ -9,6 +11,9 @@ if (typeof window == 'undefined') {
 import * as native from '../src/xmldom';
 
 describe('DOMParser', function () {
+
+  log('starting test');
+
   function testReadWrite(source: string) {
     const doc = new DOMParser().parseFromString(source);
     const serialized = new XMLSerializer().serializeToString(doc);
